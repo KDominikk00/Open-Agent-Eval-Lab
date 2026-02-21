@@ -1,0 +1,19 @@
+{
+  "task_id": "public.category.unique-task-name",
+  "title": "Task title",
+  "category": "api_usage",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Clear instruction for what the agent should output.",
+  "expected_response": "Expected response text or JSON string",
+  "required_tools": ["optional_tool_a", "optional_tool_b"],
+  "max_steps": 6,
+  "tags": ["optional", "labels"],
+  "grader": {
+    "type": "exact",
+    "ignore_case": true,
+    "collapse_whitespace": true,
+    "needles": [],
+    "allow_extra_keys": false
+  }
+}

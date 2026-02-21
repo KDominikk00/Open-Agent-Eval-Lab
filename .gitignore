@@ -9,3 +9,5 @@ results/
 .DS_Store
 
 leaderboard/
+results-ci/
+leaderboard-ci/
