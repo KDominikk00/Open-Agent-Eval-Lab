@@ -10,7 +10,7 @@ Open Agent Eval Lab helps you compare agent setups with consistent tasks and det
 
 - Benchmark task format (`tasks/`)
 - Validation and linting for task specs (`open_agent_eval.validators`)
-- Baseline runner and sample agent (`open_agent_eval.runner`)
+- Baseline runner and sample agents (`open_agent_eval.runner`, `open_agent_eval.agents`)
 - Local artifacts in JSONL/JSON for reproducible experiment history (`results/`)
 
 ## Quickstart
@@ -18,20 +18,27 @@ Open Agent Eval Lab helps you compare agent setups with consistent tasks and det
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e .
 ```
 
 Validate tasks:
 
 ```bash
-python -m open_agent_eval.cli validate --tasks-dir tasks/examples
+PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks/examples
 ```
 
 Run baseline evaluation:
 
 ```bash
-python -m open_agent_eval.cli run --tasks-dir tasks/examples --output-dir results
+PYTHONPATH=src python -m open_agent_eval.cli run --tasks-dir tasks/examples --output-dir results --agent echo-reference
 ```
+
+## Output artifacts
+
+Each run writes to `results/<run-id>/`:
+
+- `results.jsonl`: one JSON record per task
+- `summary.json`: aggregate metrics (pass rate, latency, totals)
 
 ## Roadmap
 
