@@ -14,6 +14,7 @@ It helps you compare agent configurations using a split-aware task dataset, dete
   - `json` (strict or subset mode)
 - Baseline agents for repeatable local benchmarks
 - Optional API-backed agents (OpenAI and Anthropic)
+- Custom agent plugin support via import path specs
 - Rich run metrics:
   - pass rate
   - average score
@@ -53,10 +54,37 @@ source .venv/bin/activate
 pip install -e .
 ```
 
+Use as a Python framework:
+
+```python
+from open_agent_eval import run_benchmark, validate_dataset
+
+report = validate_dataset("tasks", split="public")
+if report.is_valid:
+    run_dir, summary = run_benchmark(
+        tasks_dir="tasks",
+        output_dir="results",
+        agent="echo-reference",
+        split="public",
+    )
+    print(run_dir, summary.pass_rate)
+```
+
 List available baseline agents:
 
 ```bash
 PYTHONPATH=src python -m open_agent_eval.cli agents
+```
+
+Run with a custom plugin agent:
+
+```bash
+PYTHONPATH=src:. python -m open_agent_eval.cli run \
+  --tasks-dir tasks \
+  --output-dir results \
+  --agent examples.custom_agents.keyword_spotter:KeywordSpotterAgent \
+  --split public \
+  --max-tasks 3
 ```
 
 Validate the full dataset:
@@ -132,7 +160,7 @@ PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split 
 PYTHONPATH=src python -m open_agent_eval.cli run \
   --tasks-dir tasks \
   --output-dir results \
-  --agent [echo-reference|instruction-snippet|tool-hint|openai-chat|anthropic-chat] \
+  --agent <built-in-or-module.path:SymbolName> \
   --split [public|hidden|all] \
   --model <optional-model-name> \
   --temperature 0.0 \
@@ -204,12 +232,13 @@ See `CONTRIBUTING.md` for task and code contribution guidelines.
 
 Project planning and disclosure docs:
 
-- Roadmap: `/Users/dominik/Projects/Machine Learning/ROADMAP.md`
-- Security policy: `/Users/dominik/Projects/Machine Learning/SECURITY.md`
+- Roadmap: `ROADMAP.md`
+- Security policy: `SECURITY.md`
+- Changelog: `CHANGELOG.md`
 
 ## Hosted leaderboard
 
-The workflow in `/Users/dominik/Projects/Machine Learning/.github/workflows/deploy-leaderboard.yml` publishes a static leaderboard site to GitHub Pages whenever `main` is updated or the workflow is manually triggered.
+The workflow in `.github/workflows/deploy-leaderboard.yml` publishes a static leaderboard site to GitHub Pages whenever `main` is updated or the workflow is manually triggered.
 
 To enable it in your GitHub repository:
 
@@ -217,9 +246,14 @@ To enable it in your GitHub repository:
 2. Go to Pages.
 3. Set source to GitHub Actions.
 
-Detailed steps are also documented in `/Users/dominik/Projects/Machine Learning/docs/HOSTED_LEADERBOARD.md`.
+Detailed steps are also documented in `docs/HOSTED_LEADERBOARD.md`.
 
 ## Benchmark reporting
 
-- Real-model run guide: `/Users/dominik/Projects/Machine Learning/docs/REAL_MODEL_BENCHMARK.md`
-- Launch report template: `/Users/dominik/Projects/Machine Learning/docs/reports/BENCHMARK_REPORT_TEMPLATE.md`
+- Real-model run guide: `docs/REAL_MODEL_BENCHMARK.md`
+- Launch report template: `docs/reports/BENCHMARK_REPORT_TEMPLATE.md`
+
+## Framework extension docs
+
+- Custom agent plugin guide: `docs/CUSTOM_AGENTS.md`
+- Release checklist: `docs/RELEASE_CHECKLIST.md`

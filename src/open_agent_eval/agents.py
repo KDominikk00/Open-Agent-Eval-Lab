@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import importlib
+import inspect
 import json
 import os
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 from urllib import error, request
 
 from open_agent_eval.schemas import TaskSpec
@@ -74,6 +76,22 @@ class ToolHintAgent:
             steps = 1
 
         return AgentOutput(response=response, tool_calls=tool_calls, steps=steps)
+
+
+@dataclass(frozen=True)
+class ImportedAgentAdapter:
+    """Adapter for user-provided agent objects loaded from import paths."""
+
+    name: str
+    _delegate: Any
+
+    def run(self, task: TaskSpec) -> AgentOutput:
+        run_method = getattr(self._delegate, "run", None)
+        if not callable(run_method):
+            raise ValueError("Imported agent is missing a callable run(task) method")
+
+        raw_output = run_method(task)
+        return _coerce_agent_output(raw_output)
 
 
 def _task_prompt(task: TaskSpec) -> str:
@@ -285,19 +303,134 @@ class AnthropicChatAgent:
 
 
 def _registry() -> dict[str, Agent]:
+    return {name: factory() for name, factory in _builtin_agent_factories().items()}
+
+
+def _builtin_agent_factories() -> dict[str, Callable[..., Agent]]:
     return {
-        "echo-reference": EchoReferenceAgent(),
-        "instruction-snippet": InstructionSnippetAgent(),
-        "tool-hint": ToolHintAgent(),
-        "openai-chat": OpenAIChatAgent(),
-        "anthropic-chat": AnthropicChatAgent(),
+        "echo-reference": lambda **_: EchoReferenceAgent(),
+        "instruction-snippet": lambda **_: InstructionSnippetAgent(),
+        "tool-hint": lambda **_: ToolHintAgent(),
+        "openai-chat": lambda **kwargs: OpenAIChatAgent(
+            model=kwargs.get("model"),
+            temperature=kwargs.get("temperature", 0.0),
+            max_output_tokens=kwargs.get("max_output_tokens", 512),
+            timeout_seconds=kwargs.get("timeout_seconds", 45.0),
+        ),
+        "anthropic-chat": lambda **kwargs: AnthropicChatAgent(
+            model=kwargs.get("model"),
+            temperature=kwargs.get("temperature", 0.0),
+            max_output_tokens=kwargs.get("max_output_tokens", 512),
+            timeout_seconds=kwargs.get("timeout_seconds", 45.0),
+        ),
     }
 
 
 def list_available_agents() -> list[str]:
-    """List all available baseline agents."""
+    """List built-in agents."""
 
-    return sorted(_registry())
+    return sorted(_builtin_agent_factories())
+
+
+def _coerce_agent_output(raw_output: Any) -> AgentOutput:
+    if isinstance(raw_output, AgentOutput):
+        return raw_output
+
+    if isinstance(raw_output, str):
+        return AgentOutput(response=raw_output, tool_calls=[], steps=1)
+
+    if isinstance(raw_output, dict):
+        response = raw_output.get("response", "")
+        if not isinstance(response, str):
+            response = str(response)
+
+        raw_tool_calls = raw_output.get("tool_calls", [])
+        if not isinstance(raw_tool_calls, list):
+            raise ValueError("Imported agent output field 'tool_calls' must be a list")
+        tool_calls: list[str] = []
+        for item in raw_tool_calls:
+            if not isinstance(item, str):
+                raise ValueError("Imported agent output field 'tool_calls' must contain strings")
+            item = item.strip()
+            if item:
+                tool_calls.append(item)
+
+        steps = raw_output.get("steps", 1)
+        if not isinstance(steps, int) or steps <= 0:
+            raise ValueError("Imported agent output field 'steps' must be a positive integer")
+
+        return AgentOutput(response=response, tool_calls=tool_calls, steps=steps)
+
+    raise ValueError(
+        "Imported agent returned an unsupported output type. "
+        "Expected AgentOutput, str, or dict."
+    )
+
+
+def _split_import_spec(spec: str) -> tuple[str, str]:
+    module_name, separator, symbol_name = spec.partition(":")
+    if not separator or not module_name.strip() or not symbol_name.strip():
+        raise ValueError(
+            "Custom agent spec must be in the format 'module.path:SymbolName'."
+        )
+    return module_name.strip(), symbol_name.strip()
+
+
+def _resolve_symbol(spec: str) -> Any:
+    module_name, symbol_name = _split_import_spec(spec)
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError as exc:
+        raise ValueError(f"Failed to import module '{module_name}': {exc}") from exc
+
+    try:
+        return getattr(module, symbol_name)
+    except AttributeError as exc:
+        raise ValueError(f"Module '{module_name}' does not define symbol '{symbol_name}'") from exc
+
+
+def _call_with_supported_kwargs(callable_obj: Callable[..., Any], kwargs: dict[str, Any]) -> Any:
+    try:
+        signature = inspect.signature(callable_obj)
+    except (TypeError, ValueError):
+        return callable_obj()
+
+    accepts_var_kwargs = any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    )
+
+    if accepts_var_kwargs:
+        return callable_obj(**kwargs)
+
+    accepted_kwargs = {
+        key: value
+        for key, value in kwargs.items()
+        if key in signature.parameters
+    }
+    return callable_obj(**accepted_kwargs)
+
+
+def _instantiate_custom_agent(spec: str, init_kwargs: dict[str, Any]) -> Agent:
+    symbol = _resolve_symbol(spec)
+
+    if not callable(symbol):
+        raise ValueError(f"Imported symbol '{spec}' is not callable")
+
+    try:
+        candidate = _call_with_supported_kwargs(symbol, init_kwargs)
+    except TypeError as exc:
+        raise ValueError(f"Failed to initialize custom agent '{spec}': {exc}") from exc
+
+    if not hasattr(candidate, "run") or not callable(getattr(candidate, "run")):
+        raise ValueError(
+            f"Custom agent '{spec}' must resolve to an object that implements run(task)"
+        )
+
+    raw_name = getattr(candidate, "name", spec)
+    resolved_name = raw_name.strip() if isinstance(raw_name, str) and raw_name.strip() else spec
+
+    return ImportedAgentAdapter(name=resolved_name, _delegate=candidate)
 
 
 def get_agent(
@@ -308,28 +441,25 @@ def get_agent(
     max_output_tokens: int = 512,
     timeout_seconds: float = 45.0,
 ) -> Agent:
-    """Return a baseline agent by name."""
+    """Return a built-in or user-provided agent."""
 
-    if agent_name == "openai-chat":
-        return OpenAIChatAgent(
-            model=model,
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-            timeout_seconds=timeout_seconds,
-        )
+    init_kwargs: dict[str, Any] = {
+        "model": model,
+        "temperature": temperature,
+        "max_output_tokens": max_output_tokens,
+        "timeout_seconds": timeout_seconds,
+    }
 
-    if agent_name == "anthropic-chat":
-        return AnthropicChatAgent(
-            model=model,
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-            timeout_seconds=timeout_seconds,
-        )
+    factories = _builtin_agent_factories()
+    factory = factories.get(agent_name)
+    if factory is not None:
+        return factory(**init_kwargs)
 
-    registry = _registry()
+    if ":" in agent_name:
+        return _instantiate_custom_agent(agent_name, init_kwargs)
 
-    try:
-        return registry[agent_name]
-    except KeyError as exc:
-        options = ", ".join(sorted(registry))
-        raise ValueError(f"Unknown agent '{agent_name}'. Available agents: {options}") from exc
+    options = ", ".join(sorted(factories))
+    raise ValueError(
+        f"Unknown agent '{agent_name}'. Available built-ins: {options}. "
+        "For custom agents, use 'module.path:SymbolName'."
+    )

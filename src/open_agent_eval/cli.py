@@ -35,11 +35,15 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser = subparsers.add_parser("run", help="Run agent evaluation")
     run_parser.add_argument("--tasks-dir", required=True, help="Dataset root directory")
     run_parser.add_argument("--output-dir", required=True, help="Directory for run artifacts")
+    built_in_agents = ", ".join(list_available_agents())
     run_parser.add_argument(
         "--agent",
         default="echo-reference",
-        choices=list_available_agents(),
-        help="Baseline agent to run",
+        help=(
+            "Agent spec to run. Built-ins: "
+            f"{built_in_agents}. "
+            "Custom agents: module.path:SymbolName"
+        ),
     )
     run_parser.add_argument(
         "--split",

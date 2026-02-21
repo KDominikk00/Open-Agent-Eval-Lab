@@ -40,4 +40,4 @@ PYTHONPATH=src python -m open_agent_eval.cli run-profile \
 
 ## Build a report
 
-Use `/Users/dominik/Projects/Machine Learning/docs/reports/BENCHMARK_REPORT_TEMPLATE.md` as the launch report template.
+Use `docs/reports/BENCHMARK_REPORT_TEMPLATE.md` as the launch report template.
