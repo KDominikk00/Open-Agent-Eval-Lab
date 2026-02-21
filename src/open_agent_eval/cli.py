@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from open_agent_eval.agents import list_available_agents
+from open_agent_eval.leaderboard import generate_leaderboard
 from open_agent_eval.runner import run_from_directory
 from open_agent_eval.validators import validate_tasks_dir
 
@@ -55,6 +56,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="Optionally limit the number of tasks after sorting by task_id",
+    )
+
+    leaderboard_parser = subparsers.add_parser("leaderboard", help="Build leaderboard artifacts")
+    leaderboard_parser.add_argument("--results-dir", required=True, help="Directory containing run folders")
+    leaderboard_parser.add_argument(
+        "--output-dir",
+        default="leaderboard",
+        help="Directory where leaderboard artifacts are written",
     )
 
     agents_parser = subparsers.add_parser("agents", help="List available baseline agents")
@@ -108,6 +117,17 @@ def _cmd_run(
     return 0
 
 
+def _cmd_leaderboard(results_dir: Path, output_dir: Path) -> int:
+    try:
+        path = generate_leaderboard(results_dir=results_dir, output_dir=output_dir)
+    except ValueError as exc:
+        print(str(exc))
+        return 1
+
+    print(f"Leaderboard generated at {path}")
+    return 0
+
+
 def _cmd_agents() -> int:
     for agent_name in list_available_agents():
         print(agent_name)
@@ -132,6 +152,9 @@ def main() -> None:
                 max_tasks=args.max_tasks,
             )
         )
+
+    if args.command == "leaderboard":
+        raise SystemExit(_cmd_leaderboard(Path(args.results_dir), Path(args.output_dir)))
 
     if args.command == "agents":
         raise SystemExit(_cmd_agents())
