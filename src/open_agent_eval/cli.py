@@ -5,8 +5,16 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from open_agent_eval.agents import list_available_agents
 from open_agent_eval.runner import run_from_directory
 from open_agent_eval.validators import validate_tasks_dir
+
+
+def _split_arg(value: str) -> str | None:
+    normalized = value.strip().lower()
+    if normalized == "all":
+        return None
+    return normalized
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -14,30 +22,53 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     validate_parser = subparsers.add_parser("validate", help="Validate task files")
-    validate_parser.add_argument("--tasks-dir", required=True, help="Directory with JSON task files")
+    validate_parser.add_argument("--tasks-dir", required=True, help="Dataset root directory")
+    validate_parser.add_argument(
+        "--split",
+        default="all",
+        choices=["public", "hidden", "all"],
+        help="Validate one split or all splits (default: all)",
+    )
 
     run_parser = subparsers.add_parser("run", help="Run agent evaluation")
-    run_parser.add_argument("--tasks-dir", required=True, help="Directory with JSON task files")
+    run_parser.add_argument("--tasks-dir", required=True, help="Dataset root directory")
     run_parser.add_argument("--output-dir", required=True, help="Directory for run artifacts")
     run_parser.add_argument(
         "--agent",
         default="echo-reference",
-        help="Baseline agent to run (default: echo-reference)",
+        choices=list_available_agents(),
+        help="Baseline agent to run",
+    )
+    run_parser.add_argument(
+        "--split",
+        default="public",
+        choices=["public", "hidden", "all"],
+        help="Task split to run (default: public)",
     )
     run_parser.add_argument(
         "--run-id",
         default=None,
         help="Optional explicit run identifier",
     )
+    run_parser.add_argument(
+        "--max-tasks",
+        type=int,
+        default=None,
+        help="Optionally limit the number of tasks after sorting by task_id",
+    )
+
+    agents_parser = subparsers.add_parser("agents", help="List available baseline agents")
+    agents_parser.set_defaults(command="agents")
 
     return parser
 
 
-def _cmd_validate(tasks_dir: Path) -> int:
-    report = validate_tasks_dir(tasks_dir)
+def _cmd_validate(tasks_dir: Path, split: str | None) -> int:
+    report = validate_tasks_dir(tasks_dir, only_split=split)
 
     if report.is_valid:
-        print(f"Validated {len(report.tasks)} task(s) successfully from {tasks_dir}")
+        split_label = split or "all"
+        print(f"Validated {len(report.tasks)} task(s) successfully from {tasks_dir} ({split_label})")
         return 0
 
     for issue in report.issues:
@@ -47,22 +78,39 @@ def _cmd_validate(tasks_dir: Path) -> int:
     return 1
 
 
-def _cmd_run(tasks_dir: Path, output_dir: Path, agent_name: str, run_id: str | None) -> int:
+def _cmd_run(
+    tasks_dir: Path,
+    output_dir: Path,
+    agent_name: str,
+    split: str | None,
+    run_id: str | None,
+    max_tasks: int | None,
+) -> int:
     try:
         run_dir, summary = run_from_directory(
             tasks_dir=tasks_dir,
             output_dir=output_dir,
             agent_name=agent_name,
+            only_split=split,
             run_id=run_id,
+            max_tasks=max_tasks,
         )
     except ValueError as exc:
         print(str(exc))
         return 1
 
-    print(f"Run completed: {summary.passed_tasks}/{summary.total_tasks} tasks passed")
-    print(f"Pass rate: {summary.pass_rate:.2%}")
+    print(f"Run completed for split '{summary.split}' with agent '{summary.agent_name}'")
+    print(f"Tasks passed: {summary.passed_tasks}/{summary.total_tasks} ({summary.pass_rate:.2%})")
+    print(f"Average score: {summary.average_score:.2f}")
     print(f"Average latency: {summary.average_latency_ms:.3f} ms")
+    print(f"Average tool precision/recall: {summary.average_tool_precision:.2f}/{summary.average_tool_recall:.2f}")
     print(f"Artifacts: {run_dir}")
+    return 0
+
+
+def _cmd_agents() -> int:
+    for agent_name in list_available_agents():
+        print(agent_name)
     return 0
 
 
@@ -71,7 +119,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "validate":
-        raise SystemExit(_cmd_validate(Path(args.tasks_dir)))
+        raise SystemExit(_cmd_validate(Path(args.tasks_dir), _split_arg(args.split)))
 
     if args.command == "run":
         raise SystemExit(
@@ -79,9 +127,14 @@ def main() -> None:
                 tasks_dir=Path(args.tasks_dir),
                 output_dir=Path(args.output_dir),
                 agent_name=args.agent,
+                split=_split_arg(args.split),
                 run_id=args.run_id,
+                max_tasks=args.max_tasks,
             )
         )
+
+    if args.command == "agents":
+        raise SystemExit(_cmd_agents())
 
     raise SystemExit(parser.format_help())
 

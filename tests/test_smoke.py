@@ -9,6 +9,7 @@ class CliSmokeTests(unittest.TestCase):
         choices = parser._subparsers._group_actions[0].choices
         self.assertIn("validate", choices)
         self.assertIn("run", choices)
+        self.assertIn("agents", choices)
 
 
 if __name__ == "__main__":
