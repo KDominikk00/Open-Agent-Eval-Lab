@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
+
+from open_agent_eval.validators import validate_tasks_dir
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,10 +22,36 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _cmd_validate(tasks_dir: Path) -> int:
+    report = validate_tasks_dir(tasks_dir)
+
+    if report.is_valid:
+        print(f"Validated {len(report.tasks)} task(s) successfully from {tasks_dir}")
+        return 0
+
+    for issue in report.issues:
+        print(f"[ERROR] {issue.path}: {issue.message}")
+
+    print(f"Validation failed with {len(report.issues)} issue(s)")
+    return 1
+
+
+def _cmd_run() -> int:
+    print("Run command is not implemented yet")
+    return 2
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    raise SystemExit(f"Not implemented yet: {args.command}")
+
+    if args.command == "validate":
+        raise SystemExit(_cmd_validate(Path(args.tasks_dir)))
+
+    if args.command == "run":
+        raise SystemExit(_cmd_run())
+
+    raise SystemExit(parser.format_help())
 
 
 if __name__ == "__main__":
