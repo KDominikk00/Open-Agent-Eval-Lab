@@ -13,6 +13,7 @@ It helps you compare agent configurations using a split-aware task dataset, dete
   - `contains`
   - `json` (strict or subset mode)
 - Baseline agents for repeatable local benchmarks
+- Optional API-backed agents (OpenAI and Anthropic)
 - Rich run metrics:
   - pass rate
   - average score
@@ -74,6 +75,32 @@ PYTHONPATH=src python -m open_agent_eval.cli run \
   --split public
 ```
 
+Run a benchmark with a real model via OpenAI:
+
+```bash
+export OPENAI_API_KEY="your-key"
+PYTHONPATH=src python -m open_agent_eval.cli run \
+  --tasks-dir tasks \
+  --output-dir results \
+  --agent openai-chat \
+  --model gpt-4o-mini \
+  --split public \
+  --max-tasks 5
+```
+
+Run a benchmark with a real model via Anthropic:
+
+```bash
+export ANTHROPIC_API_KEY="your-key"
+PYTHONPATH=src python -m open_agent_eval.cli run \
+  --tasks-dir tasks \
+  --output-dir results \
+  --agent anthropic-chat \
+  --model claude-3-5-haiku-latest \
+  --split public \
+  --max-tasks 5
+```
+
 Generate leaderboard artifacts:
 
 ```bash
@@ -96,8 +123,12 @@ PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split 
 PYTHONPATH=src python -m open_agent_eval.cli run \
   --tasks-dir tasks \
   --output-dir results \
-  --agent [echo-reference|instruction-snippet|tool-hint] \
+  --agent [echo-reference|instruction-snippet|tool-hint|openai-chat|anthropic-chat] \
   --split [public|hidden|all] \
+  --model <optional-model-name> \
+  --temperature 0.0 \
+  --max-output-tokens 512 \
+  --timeout-seconds 45 \
   --max-tasks 5
 ```
 
@@ -153,3 +184,15 @@ PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results -
 ## Contributing
 
 See `CONTRIBUTING.md` for task and code contribution guidelines.
+
+## Hosted leaderboard
+
+The workflow in `/Users/dominik/Projects/Machine Learning/.github/workflows/deploy-leaderboard.yml` publishes a static leaderboard site to GitHub Pages whenever `main` is updated or the workflow is manually triggered.
+
+To enable it in your GitHub repository:
+
+1. Open repository settings.
+2. Go to Pages.
+3. Set source to GitHub Actions.
+
+Detailed steps are also documented in `/Users/dominik/Projects/Machine Learning/docs/HOSTED_LEADERBOARD.md`.
