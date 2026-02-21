@@ -41,3 +41,11 @@ PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split 
 - Dataset validation passes.
 - Changes include documentation updates when interfaces change.
 - Commit messages should be clear and human-readable.
+
+## Issue templates
+
+Use the repository issue templates when opening:
+
+- Bug reports
+- Task proposals
+- Feature requests

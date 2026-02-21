@@ -185,6 +185,11 @@ PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results -
 
 See `CONTRIBUTING.md` for task and code contribution guidelines.
 
+Project planning and disclosure docs:
+
+- Roadmap: `/Users/dominik/Projects/Machine Learning/ROADMAP.md`
+- Security policy: `/Users/dominik/Projects/Machine Learning/SECURITY.md`
+
 ## Hosted leaderboard
 
 The workflow in `/Users/dominik/Projects/Machine Learning/.github/workflows/deploy-leaderboard.yml` publishes a static leaderboard site to GitHub Pages whenever `main` is updated or the workflow is manually triggered.

@@ -1,0 +1,37 @@
+name: Task proposal
+description: Propose a new benchmark task for public or hidden splits.
+title: "[Task]: "
+labels:
+  - benchmark-task
+body:
+  - type: dropdown
+    id: split
+    attributes:
+      label: Split
+      options:
+        - public
+        - hidden
+    validations:
+      required: true
+  - type: input
+    id: category
+    attributes:
+      label: Category
+      description: e.g. api_usage, security, debugging
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why this task matters
+      description: Explain what capability this task evaluates.
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: Draft task spec
+      description: Paste JSON matching docs/TASK_TEMPLATE.json.
+      render: json
+    validations:
+      required: true
