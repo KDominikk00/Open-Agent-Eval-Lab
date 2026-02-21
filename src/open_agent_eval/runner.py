@@ -240,6 +240,10 @@ def run_from_directory(
     tasks_dir: Path,
     output_dir: Path,
     agent_name: str,
+    model: str | None = None,
+    temperature: float = 0.0,
+    max_output_tokens: int = 512,
+    timeout_seconds: float = 45.0,
     run_id: str | None = None,
     only_split: str | None = "public",
     max_tasks: int | None = None,
@@ -263,7 +267,13 @@ def run_from_directory(
     if not tasks:
         raise ValueError("No tasks selected after filtering")
 
-    agent = get_agent(agent_name)
+    agent = get_agent(
+        agent_name,
+        model=model,
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
+        timeout_seconds=timeout_seconds,
+    )
     results, summary = run_benchmark(tasks, agent, run_id=run_id, split_label=split_label)
     categories = build_category_summaries(results)
 
@@ -271,6 +281,10 @@ def run_from_directory(
         "tasks_dir": str(tasks_dir),
         "split": split_label,
         "agent_name": agent_name,
+        "model": model,
+        "temperature": temperature,
+        "max_output_tokens": max_output_tokens,
+        "timeout_seconds": timeout_seconds,
         "max_tasks": max_tasks,
         "selected_task_ids": [task.task_id for task in tasks],
     }

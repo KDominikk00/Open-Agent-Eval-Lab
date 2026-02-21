@@ -57,6 +57,29 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optionally limit the number of tasks after sorting by task_id",
     )
+    run_parser.add_argument(
+        "--model",
+        default=None,
+        help="Optional model override for API-backed agents",
+    )
+    run_parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.0,
+        help="Sampling temperature for API-backed agents (default: 0.0)",
+    )
+    run_parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=512,
+        help="Maximum output tokens for API-backed agents (default: 512)",
+    )
+    run_parser.add_argument(
+        "--timeout-seconds",
+        type=float,
+        default=45.0,
+        help="HTTP timeout for API-backed agents (default: 45)",
+    )
 
     leaderboard_parser = subparsers.add_parser("leaderboard", help="Build leaderboard artifacts")
     leaderboard_parser.add_argument("--results-dir", required=True, help="Directory containing run folders")
@@ -91,6 +114,10 @@ def _cmd_run(
     tasks_dir: Path,
     output_dir: Path,
     agent_name: str,
+    model: str | None,
+    temperature: float,
+    max_output_tokens: int,
+    timeout_seconds: float,
     split: str | None,
     run_id: str | None,
     max_tasks: int | None,
@@ -100,6 +127,10 @@ def _cmd_run(
             tasks_dir=tasks_dir,
             output_dir=output_dir,
             agent_name=agent_name,
+            model=model,
+            temperature=temperature,
+            max_output_tokens=max_output_tokens,
+            timeout_seconds=timeout_seconds,
             only_split=split,
             run_id=run_id,
             max_tasks=max_tasks,
@@ -147,6 +178,10 @@ def main() -> None:
                 tasks_dir=Path(args.tasks_dir),
                 output_dir=Path(args.output_dir),
                 agent_name=args.agent,
+                model=args.model,
+                temperature=args.temperature,
+                max_output_tokens=args.max_output_tokens,
+                timeout_seconds=args.timeout_seconds,
                 split=_split_arg(args.split),
                 run_id=args.run_id,
                 max_tasks=args.max_tasks,
