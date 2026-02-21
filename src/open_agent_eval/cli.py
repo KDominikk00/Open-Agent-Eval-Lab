@@ -7,6 +7,7 @@ from pathlib import Path
 
 from open_agent_eval.agents import list_available_agents
 from open_agent_eval.leaderboard import generate_leaderboard
+from open_agent_eval.profiles import execute_profile, load_profile
 from open_agent_eval.runner import run_from_directory
 from open_agent_eval.validators import validate_tasks_dir
 
@@ -89,6 +90,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory where leaderboard artifacts are written",
     )
 
+    run_profile_parser = subparsers.add_parser("run-profile", help="Run a benchmark profile JSON")
+    run_profile_parser.add_argument("--profile", required=True, help="Path to a benchmark profile JSON file")
+    run_profile_parser.add_argument(
+        "--timestamp",
+        default=None,
+        help="Optional timestamp suffix used for generated run IDs",
+    )
+    run_profile_parser.add_argument(
+        "--tasks-dir",
+        default=None,
+        help="Optional override for tasks directory",
+    )
+    run_profile_parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Optional override for run artifacts directory",
+    )
+    run_profile_parser.add_argument(
+        "--leaderboard-output-dir",
+        default=None,
+        help="Optional override for leaderboard output directory",
+    )
+    run_profile_parser.add_argument(
+        "--skip-leaderboard",
+        action="store_true",
+        help="Skip leaderboard regeneration after profile runs",
+    )
+
     agents_parser = subparsers.add_parser("agents", help="List available baseline agents")
     agents_parser.set_defaults(command="agents")
 
@@ -159,6 +188,45 @@ def _cmd_leaderboard(results_dir: Path, output_dir: Path) -> int:
     return 0
 
 
+def _cmd_run_profile(
+    profile_path: Path,
+    timestamp: str | None,
+    tasks_dir_override: Path | None,
+    output_dir_override: Path | None,
+    leaderboard_output_dir_override: Path | None,
+    skip_leaderboard: bool,
+) -> int:
+    try:
+        profile = load_profile(profile_path)
+        result = execute_profile(
+            profile,
+            profile_path=profile_path,
+            timestamp=timestamp,
+            tasks_dir_override=tasks_dir_override,
+            output_dir_override=output_dir_override,
+            leaderboard_output_dir_override=leaderboard_output_dir_override,
+            skip_leaderboard=skip_leaderboard,
+        )
+    except ValueError as exc:
+        print(str(exc))
+        return 1
+
+    print(f"Profile completed: {result.profile_name}")
+    for outcome in result.outcomes:
+        summary = outcome.summary
+        print(
+            f"- {outcome.run_label}: {summary.passed_tasks}/{summary.total_tasks} "
+            f"({summary.pass_rate:.2%}) -> {outcome.artifacts_dir}"
+        )
+
+    if result.leaderboard_dir:
+        print(f"Leaderboard refreshed at {result.leaderboard_dir}")
+    elif skip_leaderboard:
+        print("Leaderboard generation skipped")
+
+    return 0
+
+
 def _cmd_agents() -> int:
     for agent_name in list_available_agents():
         print(agent_name)
@@ -190,6 +258,20 @@ def main() -> None:
 
     if args.command == "leaderboard":
         raise SystemExit(_cmd_leaderboard(Path(args.results_dir), Path(args.output_dir)))
+
+    if args.command == "run-profile":
+        raise SystemExit(
+            _cmd_run_profile(
+                profile_path=Path(args.profile),
+                timestamp=args.timestamp,
+                tasks_dir_override=Path(args.tasks_dir) if args.tasks_dir else None,
+                output_dir_override=Path(args.output_dir) if args.output_dir else None,
+                leaderboard_output_dir_override=Path(args.leaderboard_output_dir)
+                if args.leaderboard_output_dir
+                else None,
+                skip_leaderboard=args.skip_leaderboard,
+            )
+        )
 
     if args.command == "agents":
         raise SystemExit(_cmd_agents())

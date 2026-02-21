@@ -101,6 +101,15 @@ PYTHONPATH=src python -m open_agent_eval.cli run \
   --max-tasks 5
 ```
 
+Run the prepared OpenAI vs Anthropic comparison profile:
+
+```bash
+export OPENAI_API_KEY="your-key"
+export ANTHROPIC_API_KEY="your-key"
+PYTHONPATH=src python -m open_agent_eval.cli run-profile \
+  --profile profiles/real-models-public.json
+```
+
 Generate leaderboard artifacts:
 
 ```bash
@@ -136,6 +145,14 @@ PYTHONPATH=src python -m open_agent_eval.cli run \
 
 ```bash
 PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results --output-dir leaderboard
+```
+
+### `run-profile`
+
+```bash
+PYTHONPATH=src python -m open_agent_eval.cli run-profile \
+  --profile profiles/real-models-public.json \
+  --timestamp 20260221-180000
 ```
 
 ## Run artifact format
@@ -201,3 +218,8 @@ To enable it in your GitHub repository:
 3. Set source to GitHub Actions.
 
 Detailed steps are also documented in `/Users/dominik/Projects/Machine Learning/docs/HOSTED_LEADERBOARD.md`.
+
+## Benchmark reporting
+
+- Real-model run guide: `/Users/dominik/Projects/Machine Learning/docs/REAL_MODEL_BENCHMARK.md`
+- Launch report template: `/Users/dominik/Projects/Machine Learning/docs/reports/BENCHMARK_REPORT_TEMPLATE.md`

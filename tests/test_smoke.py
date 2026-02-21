@@ -10,6 +10,7 @@ class CliSmokeTests(unittest.TestCase):
         self.assertIn("validate", choices)
         self.assertIn("run", choices)
         self.assertIn("leaderboard", choices)
+        self.assertIn("run-profile", choices)
         self.assertIn("agents", choices)
 
 
