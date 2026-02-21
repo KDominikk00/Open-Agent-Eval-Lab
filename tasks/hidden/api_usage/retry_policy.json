@@ -1,0 +1,16 @@
+{
+  "task_id": "hidden.api.retry-policy",
+  "title": "Describe safe retry policy",
+  "category": "api_usage",
+  "split": "hidden",
+  "difficulty": "hard",
+  "instructions": "Recommend a retry strategy for 429 errors and mention exponential backoff with jitter.",
+  "expected_response": "Use exponential backoff with jitter",
+  "required_tools": ["http_docs"],
+  "max_steps": 6,
+  "tags": ["retry", "resilience"],
+  "grader": {
+    "type": "contains",
+    "needles": ["exponential backoff", "jitter"]
+  }
+}

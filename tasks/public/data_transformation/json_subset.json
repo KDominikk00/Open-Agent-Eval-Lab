@@ -1,0 +1,16 @@
+{
+  "task_id": "public.transform.json-subset",
+  "title": "Return a JSON with required keys",
+  "category": "data_transformation",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Return JSON containing keys status=ok and count=3. Additional keys are allowed.",
+  "expected_response": "{\"status\": \"ok\", \"count\": 3}",
+  "required_tools": ["json_tool"],
+  "max_steps": 4,
+  "tags": ["json", "subset"],
+  "grader": {
+    "type": "json",
+    "allow_extra_keys": true
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "task_id": "public.format.markdown-summary",
+  "title": "Format output as markdown",
+  "category": "formatting",
+  "split": "public",
+  "difficulty": "easy",
+  "instructions": "Provide a markdown summary with a heading '# Incident Summary' and include the word 'Mitigation'.",
+  "expected_response": "# Incident Summary\nMitigation",
+  "required_tools": [],
+  "max_steps": 3,
+  "tags": ["markdown", "reporting"],
+  "grader": {
+    "type": "contains",
+    "needles": ["# incident summary", "mitigation"],
+    "ignore_case": true
+  }
+}

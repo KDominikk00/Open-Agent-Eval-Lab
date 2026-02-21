@@ -1,0 +1,15 @@
+{
+  "task_id": "hidden.transform.order-total",
+  "title": "Compute order total payload",
+  "category": "data_transformation",
+  "split": "hidden",
+  "difficulty": "hard",
+  "instructions": "Return JSON with order_id=501 and total=129.97.",
+  "expected_response": "{\"order_id\": 501, \"total\": 129.97}",
+  "required_tools": ["json_tool"],
+  "max_steps": 5,
+  "tags": ["json", "numeric"],
+  "grader": {
+    "type": "json"
+  }
+}

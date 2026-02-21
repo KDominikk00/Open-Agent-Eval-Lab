@@ -1,0 +1,16 @@
+{
+  "task_id": "hidden.reasoning.error-budget",
+  "title": "Decide whether to deploy",
+  "category": "reasoning",
+  "split": "hidden",
+  "difficulty": "hard",
+  "instructions": "Given that error budget is exhausted, state whether deployment should proceed.",
+  "expected_response": "Do not deploy",
+  "required_tools": ["slo_dashboard"],
+  "max_steps": 4,
+  "tags": ["sre", "release"],
+  "grader": {
+    "type": "exact",
+    "ignore_case": true
+  }
+}

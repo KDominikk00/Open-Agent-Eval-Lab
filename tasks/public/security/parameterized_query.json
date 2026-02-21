@@ -1,0 +1,16 @@
+{
+  "task_id": "public.security.parameterized-query",
+  "title": "Recommend secure SQL pattern",
+  "category": "security",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Explain how to avoid SQL injection for a login query and include parameterized statements.",
+  "expected_response": "Use parameterized queries",
+  "required_tools": ["security_guide"],
+  "max_steps": 5,
+  "tags": ["sql", "injection"],
+  "grader": {
+    "type": "contains",
+    "needles": ["parameterized", "sql injection"]
+  }
+}

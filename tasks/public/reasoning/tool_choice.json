@@ -1,0 +1,16 @@
+{
+  "task_id": "public.reasoning.tool-choice",
+  "title": "Choose the right tools",
+  "category": "reasoning",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "You need to debug a flaky endpoint and verify DB indices. Explain which tools you will use first and second.",
+  "expected_response": "Use logs first and then db_inspector",
+  "required_tools": ["logs", "db_inspector"],
+  "max_steps": 5,
+  "tags": ["tooling", "order"],
+  "grader": {
+    "type": "contains",
+    "needles": ["logs", "db_inspector"]
+  }
+}

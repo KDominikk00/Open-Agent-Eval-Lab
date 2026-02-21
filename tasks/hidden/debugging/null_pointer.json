@@ -1,0 +1,16 @@
+{
+  "task_id": "hidden.debug.null-pointer",
+  "title": "Identify null pointer mitigation",
+  "category": "debugging",
+  "split": "hidden",
+  "difficulty": "hard",
+  "instructions": "Summarize likely root cause for null pointer in user profile serializer and include a guard clause fix.",
+  "expected_response": "Add a null guard in serializer",
+  "required_tools": ["logs", "code_search"],
+  "max_steps": 7,
+  "tags": ["null", "serializer"],
+  "grader": {
+    "type": "contains",
+    "needles": ["null", "guard"]
+  }
+}

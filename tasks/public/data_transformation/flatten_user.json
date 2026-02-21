@@ -1,0 +1,15 @@
+{
+  "task_id": "public.transform.flatten-user",
+  "title": "Flatten nested user JSON",
+  "category": "data_transformation",
+  "split": "public",
+  "difficulty": "easy",
+  "instructions": "Transform {\"user\": {\"id\": 7, \"name\": \"Alex\"}} into a flattened object.",
+  "expected_response": "{\"user_id\": 7, \"user_name\": \"Alex\"}",
+  "required_tools": ["json_tool"],
+  "max_steps": 5,
+  "tags": ["json", "mapping"],
+  "grader": {
+    "type": "json"
+  }
+}

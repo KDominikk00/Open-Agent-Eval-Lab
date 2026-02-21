@@ -1,0 +1,16 @@
+{
+  "task_id": "hidden.tools.multi-step-plan",
+  "title": "Propose tool execution plan",
+  "category": "tool_use",
+  "split": "hidden",
+  "difficulty": "hard",
+  "instructions": "Provide a two-step plan that uses logs first and metrics second for diagnosing latency.",
+  "expected_response": "1) logs 2) metrics",
+  "required_tools": ["logs", "metrics"],
+  "max_steps": 5,
+  "tags": ["latency", "triage"],
+  "grader": {
+    "type": "contains",
+    "needles": ["logs", "metrics"]
+  }
+}

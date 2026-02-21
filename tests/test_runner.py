@@ -36,17 +36,20 @@ class RunnerTests(unittest.TestCase):
             tmp_path = Path(tmp)
             tasks_dir = tmp_path / "tasks"
             output_dir = tmp_path / "results"
-            tasks_dir.mkdir()
+            (tasks_dir / "public" / "api_usage").mkdir(parents=True)
 
             payload = {
                 "task_id": "task.valid",
                 "title": "Valid task",
                 "category": "api_usage",
+                "split": "public",
                 "instructions": "Do the thing",
                 "expected_response": "Done",
                 "required_tools": ["http_docs"],
             }
-            (tasks_dir / "task.json").write_text(json.dumps(payload), encoding="utf-8")
+            (tasks_dir / "public" / "api_usage" / "task.json").write_text(
+                json.dumps(payload), encoding="utf-8"
+            )
 
             run_dir, summary = run_from_directory(
                 tasks_dir=tasks_dir,

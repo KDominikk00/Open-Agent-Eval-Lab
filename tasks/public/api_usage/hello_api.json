@@ -1,10 +1,15 @@
 {
-  "task_id": "api.hello-world",
+  "task_id": "public.api.hello-world",
   "title": "Build a hello-world API call",
   "category": "api_usage",
+  "split": "public",
+  "difficulty": "easy",
   "instructions": "Return a curl command that calls GET https://example.com/hello and sets header Accept: application/json.",
   "expected_response": "curl -H 'Accept: application/json' https://example.com/hello",
   "required_tools": ["http_docs"],
   "max_steps": 4,
-  "tags": ["curl", "headers"]
+  "tags": ["curl", "headers"],
+  "grader": {
+    "type": "exact"
+  }
 }

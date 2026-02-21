@@ -1,0 +1,16 @@
+{
+  "task_id": "public.debug.timeout-root-cause",
+  "title": "Identify timeout cause",
+  "category": "debugging",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Given symptoms of HTTP 504 errors during DB migrations, provide a concise root-cause summary and mention transaction lock contention.",
+  "expected_response": "transaction lock contention during migration",
+  "required_tools": ["logs", "db_docs"],
+  "max_steps": 6,
+  "tags": ["timeouts", "database"],
+  "grader": {
+    "type": "contains",
+    "needles": ["lock contention", "migration"]
+  }
+}

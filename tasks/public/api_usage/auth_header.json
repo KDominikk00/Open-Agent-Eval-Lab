@@ -1,0 +1,15 @@
+{
+  "task_id": "public.api.auth-header",
+  "title": "Create an authenticated API request",
+  "category": "api_usage",
+  "split": "public",
+  "difficulty": "easy",
+  "instructions": "Return a curl command that calls POST https://api.example.com/v1/items with headers Authorization: Bearer TOKEN and Content-Type: application/json.",
+  "expected_response": "curl -X POST -H 'Authorization: Bearer TOKEN' -H 'Content-Type: application/json' https://api.example.com/v1/items",
+  "required_tools": ["http_docs"],
+  "max_steps": 4,
+  "tags": ["curl", "auth"],
+  "grader": {
+    "type": "exact"
+  }
+}
