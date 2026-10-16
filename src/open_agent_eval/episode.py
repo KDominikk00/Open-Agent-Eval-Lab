@@ -36,7 +36,9 @@ Action = ToolCall | FinalAnswer
 class EpisodeAgent(Protocol):
     """Agents that choose one action at a time given the trace so far."""
 
-    name: str
+    @property
+    def name(self) -> str:
+        """Display name used in reports."""
 
     def decide(self, task: TaskSpec, history: list[TraceStep]) -> Action:
         """Return the next tool call, or the final answer."""

@@ -23,9 +23,7 @@ from open_agent_eval.schemas import TaskSpec
 from open_agent_eval.tools import KNOWN_TOOLS, Environment
 
 _STOPWORDS = frozenset(
-    "the a an and or of to in on for with from that this these those is are was were be been it its "
-    "as at by your you we our which what when where how why use using then first second after before "
-    "into out not any all each find tell give return report identify explain check".split()
+    ["the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "with", "from", "that", "this", "these", "those", "is", "are", "was", "were", "be", "been", "it", "its", "as", "at", "by", "your", "you", "we", "our", "which", "what", "when", "where", "how", "why", "use", "using", "then", "first", "second", "after", "before", "into", "out", "not", "any", "all", "each", "find", "tell", "give", "return", "report", "identify", "explain", "check"]
 )
 
 
@@ -102,7 +100,7 @@ class RandomAgent:
     name: str = "random"
     seed: int = 0
 
-    def with_trial(self, trial: int) -> "RandomAgent":
+    def with_trial(self, trial: int) -> RandomAgent:
         return replace(self, seed=self.seed + trial)
 
     def _rng(self, task: TaskSpec, step: int) -> random.Random:

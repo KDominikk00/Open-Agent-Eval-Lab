@@ -28,6 +28,9 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
 ]
 
 [project.scripts]
@@ -41,3 +44,39 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 open_agent_eval = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["open_agent_eval"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 85
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["src", "tests", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RUF"]
+# RUF001: the report intentionally uses typographic characters (x, en dash).
+# SIM108: nested ternaries (precision/recall) read worse than if/else.
+ignore = ["RUF001", "SIM108"]
+
+[tool.ruff.lint.per-file-ignores]
+# Inline HTML/CSS templates are not worth reflowing.
+"src/open_agent_eval/leaderboard.py" = ["E501"]
+"src/open_agent_eval/policies.py" = ["E501"]
+"tests/*" = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src/open_agent_eval", "examples"]

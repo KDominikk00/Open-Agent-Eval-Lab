@@ -247,7 +247,7 @@ def _cmd_run_profile(
     for outcome in result.outcomes:
         summary = outcome.summary
         print(
-            f"- {outcome.run_label}: {summary.passed_tasks}/{summary.total_tasks} "
+            f"- {outcome.run_label}: {summary.passed_tasks}/{summary.total_attempts} "
             f"({summary.pass_rate:.2%}) -> {outcome.artifacts_dir}"
         )
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -220,20 +220,11 @@ def _run_trial(tasks: list[TaskSpec], agent: Agent, trial: int) -> list[TaskRunR
             error = str(exc)
 
         latency_ms = round((perf_counter() - start) * 1000, 3)
-        grade = (
-            grade_task(task, output.response, output.tool_calls, output.final_files)
-            if error is None
-            else None
-        )
-
         if error is not None:
-            score = 0.0
-            success = False
-            grade_reason = f"agent error: {error}"
+            score, success, grade_reason = 0.0, False, f"agent error: {error}"
         else:
-            score = grade.score
-            success = grade.success
-            grade_reason = grade.reason
+            grade = grade_task(task, output.response, output.tool_calls, output.final_files)
+            score, success, grade_reason = grade.score, grade.success, grade.reason
 
         tool_precision, tool_recall = compute_tool_match(task.required_tools, output.tool_calls)
         capped_steps = min(output.steps, task.max_steps)

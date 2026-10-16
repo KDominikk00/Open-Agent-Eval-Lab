@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Sequence
+from collections.abc import Sequence
 
 Z_95 = 1.959963984540054
 

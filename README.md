@@ -232,7 +232,6 @@ See `CONTRIBUTING.md` for task and code contribution guidelines.
 
 Project planning and disclosure docs:
 
-- Roadmap: `ROADMAP.md`
 - Security policy: `SECURITY.md`
 - Changelog: `CHANGELOG.md`
 
@@ -256,4 +255,3 @@ Detailed steps are also documented in `docs/HOSTED_LEADERBOARD.md`.
 ## Framework extension docs
 
 - Custom agent plugin guide: `docs/CUSTOM_AGENTS.md`
-- Release checklist: `docs/RELEASE_CHECKLIST.md`

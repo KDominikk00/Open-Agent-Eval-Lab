@@ -8,7 +8,7 @@
 
 ## Verification
 
-- [ ] `PYTHONPATH=src python -m unittest discover -s tests -v`
+- [ ] `make check` (ruff, mypy, pytest)
 - [ ] `PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split all`
 - [ ] If relevant: benchmark run and leaderboard regenerated
 

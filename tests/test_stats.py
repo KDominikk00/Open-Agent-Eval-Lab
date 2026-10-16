@@ -40,6 +40,10 @@ class IntervalTests(unittest.TestCase):
         self.assertEqual((1.0, 1.0), bootstrap_mean_interval([1.0, 1.0, 1.0]))
 
 
+def _read_results(run_dir: Path) -> list[dict]:
+    return [json.loads(line) for line in (run_dir / "results.jsonl").read_text().splitlines()]
+
+
 class TrialAndReportTests(unittest.TestCase):
     def _run(self, out: Path, agent: str, **kwargs):
         return run_from_directory(
@@ -52,8 +56,7 @@ class TrialAndReportTests(unittest.TestCase):
             run_b, _ = self._run(Path(tmp), "random", run_id="b", trials=3)
             self.assertEqual(3, summary.trials)
             self.assertEqual(summary.total_tasks * 3, summary.total_attempts)
-            read = lambda d: [json.loads(x) for x in (d / "results.jsonl").read_text().splitlines()]
-            first, second = read(run_a), read(run_b)
+            first, second = _read_results(run_a), _read_results(run_b)
             self.assertEqual([r["success"] for r in first], [r["success"] for r in second])
             self.assertEqual({0, 1, 2}, {r["trial"] for r in first})
             traces = {t: [json.dumps(r["trace"]) for r in first if r["trial"] == t] for t in (0, 1)}
@@ -70,9 +73,8 @@ class TrialAndReportTests(unittest.TestCase):
             self.assertIn("contains", {b["category"] for b in breakdowns["grader_type"]})
 
     def test_invalid_trials_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(ValueError):
-                self._run(Path(tmp), "oracle", trials=0)
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(ValueError):
+            self._run(Path(tmp), "oracle", trials=0)
 
     def test_leaderboard_hides_smoke_and_renders_traces(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

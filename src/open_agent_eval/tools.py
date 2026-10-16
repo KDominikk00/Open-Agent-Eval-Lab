@@ -9,7 +9,8 @@ from __future__ import annotations
 import ast
 import json
 import operator
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 ENVIRONMENT_KEYS = {"files", "logs", "tables", "http"}
 MAX_SEARCH_RESULTS = 20
@@ -103,9 +104,11 @@ def _eval_node(node: ast.AST) -> float:
         left, right = _eval_node(node.left), _eval_node(node.right)
         if isinstance(node.op, ast.Pow) and abs(right) > 64:
             raise ToolError("exponent too large")
-        return _BINARY_OPS[type(node.op)](left, right)
+        result: float = _BINARY_OPS[type(node.op)](left, right)
+        return result
     if isinstance(node, ast.UnaryOp) and type(node.op) in _UNARY_OPS:
-        return _UNARY_OPS[type(node.op)](_eval_node(node.operand))
+        negated: float = _UNARY_OPS[type(node.op)](_eval_node(node.operand))
+        return negated
     raise ToolError("unsupported expression")
 
 
@@ -175,7 +178,7 @@ class Environment:
             raise ToolError(f"tool '{name}' is not available for this task")
         if not isinstance(args, dict):
             raise ToolError("tool arguments must be an object")
-        handler = getattr(self, f"_tool_{name}")
+        handler: Callable[[dict[str, Any]], str] = getattr(self, f"_tool_{name}")
         return handler(args)
 
     @staticmethod

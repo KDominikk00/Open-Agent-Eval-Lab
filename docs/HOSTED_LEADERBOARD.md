@@ -8,9 +8,10 @@ This repository includes an automated GitHub Pages deployment workflow:
 ## What the workflow does
 
 1. Validates benchmark tasks.
-2. Runs two baseline benchmark passes.
-3. Generates leaderboard artifacts.
-4. Publishes the generated static site to GitHub Pages.
+2. Builds the leaderboard and trace viewer from the committed baselines in `benchmarks/published/` (regenerate them with `make baselines`).
+3. Publishes the static site to GitHub Pages.
+
+The site is built from committed results rather than fresh runs, so what is published is exactly what was reviewed in the repository.
 
 ## Enable in repository settings
 

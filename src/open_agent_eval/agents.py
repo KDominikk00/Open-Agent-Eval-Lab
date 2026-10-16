@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import importlib
 import inspect
 import json
 import os
-from typing import Any, Callable, Protocol
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 from urllib import error, request
 
 from open_agent_eval.episode import (
@@ -48,7 +49,9 @@ def output_from_episode(result: EpisodeResult) -> AgentOutput:
 class Agent(Protocol):
     """Protocol implemented by all agent backends."""
 
-    name: str
+    @property
+    def name(self) -> str:
+        """Display name used in reports."""
 
     def run(self, task: TaskSpec) -> AgentOutput:
         """Execute one task and return the agent output."""
@@ -242,7 +245,7 @@ class OpenAIChatAgent:
         return {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
     def _model(self) -> str:
-        return self.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        return self.model or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
 
     @staticmethod
     def _first_message(response: dict[str, Any]) -> dict[str, Any]:
@@ -392,7 +395,7 @@ class AnthropicChatAgent:
         }
 
     def _model(self) -> str:
-        return self.model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-haiku-latest")
+        return self.model or os.getenv("ANTHROPIC_MODEL") or "claude-3-5-haiku-latest"
 
     def run(self, task: TaskSpec) -> AgentOutput:
         if task.environment:
@@ -601,7 +604,7 @@ def _instantiate_custom_agent(spec: str, init_kwargs: dict[str, Any]) -> Agent:
     except TypeError as exc:
         raise ValueError(f"Failed to initialize custom agent '{spec}': {exc}") from exc
 
-    if not hasattr(candidate, "run") or not callable(getattr(candidate, "run")):
+    if not hasattr(candidate, "run") or not callable(candidate.run):
         raise ValueError(
             f"Custom agent '{spec}' must resolve to an object that implements run(task)"
         )

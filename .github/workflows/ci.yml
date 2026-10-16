@@ -4,39 +4,66 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test-and-smoke:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install
-        run: pip install -e .
-      - name: Unit tests
-        run: PYTHONPATH=src python -m unittest discover -s tests -v
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check .
+      - name: Mypy (strict)
+        run: mypy
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Tests with coverage
+        run: pytest --cov
       - name: Validate benchmark tasks
-        run: PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split all
-      - name: Run smoke benchmark
+        run: open-agent-eval validate --tasks-dir tasks --split all
+      - name: Offline smoke runs (oracle and multi-trial random)
         run: |
-          PYTHONPATH=src python -m open_agent_eval.cli run \
-            --tasks-dir tasks \
-            --output-dir results-ci \
-            --agent instruction-snippet \
-            --split public \
-            --max-tasks 3 \
-            --label smoke \
-            --run-id run-ci-smoke
-      - name: Offline multi-trial episode run
-        run: |
-          PYTHONPATH=src python -m open_agent_eval.cli run \
-            --tasks-dir tasks \
-            --output-dir results-ci \
-            --agent random \
-            --split all \
-            --trials 3 \
-            --label smoke \
-            --run-id run-ci-random
+          open-agent-eval run --tasks-dir tasks --output-dir results-ci --agent oracle \
+            --split public --label smoke --run-id run-ci-oracle
+          open-agent-eval run --tasks-dir tasks --output-dir results-ci --agent random \
+            --split all --trials 3 --label smoke --run-id run-ci-random
       - name: Build smoke leaderboard
-        run: PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results-ci --output-dir leaderboard-ci --include-smoke
+        run: open-agent-eval leaderboard --results-dir results-ci --output-dir leaderboard-ci --include-smoke
+      - name: Upload leaderboard preview
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: leaderboard-preview
+          path: leaderboard-ci
+
+  published-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Rebuild baselines and check the committed snapshot is current
+        run: |
+          cp -r benchmarks/published /tmp/committed-baselines
+          scripts/publish_baselines.sh > /dev/null
+          python scripts/check_snapshot.py /tmp/committed-baselines benchmarks/published

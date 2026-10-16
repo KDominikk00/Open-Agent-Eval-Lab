@@ -59,7 +59,7 @@ def _is_subset(expected: Any, actual: Any) -> bool:
             return False
         return all(_is_subset(expected[i], actual[i]) for i in range(len(expected)))
 
-    return expected == actual
+    return bool(expected == actual)
 
 
 def _grade_json(expected: str, actual: str, grader: GraderSpec) -> GradeResult:
