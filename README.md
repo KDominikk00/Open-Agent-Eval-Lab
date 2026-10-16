@@ -1,6 +1,6 @@
 # Open Agent Eval Lab
 
-[![CI](https://github.com/KDominikk00/Machine-Learning/actions/workflows/ci.yml/badge.svg)](https://github.com/KDominikk00/Machine-Learning/actions/workflows/ci.yml)
+[![CI](https://github.com/KDominikk00/Open-Agent-Eval-Lab/actions/workflows/ci.yml/badge.svg)](https://github.com/KDominikk00/Open-Agent-Eval-Lab/actions/workflows/ci.yml)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-brightgreen)
 ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)
