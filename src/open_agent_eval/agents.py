@@ -395,7 +395,7 @@ class AnthropicChatAgent:
         }
 
     def _model(self) -> str:
-        return self.model or os.getenv("ANTHROPIC_MODEL") or "claude-3-5-haiku-latest"
+        return self.model or os.getenv("ANTHROPIC_MODEL") or "claude-haiku-5-5"
 
     def run(self, task: TaskSpec) -> AgentOutput:
         if task.environment:

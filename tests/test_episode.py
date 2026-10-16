@@ -78,6 +78,17 @@ class EpisodeTests(unittest.TestCase):
         self.assertEqual(1.0, summary.pass_rate)
         self.assertEqual("search_logs", results[0].trace[0]["tool"])
 
+    def test_oracle_solves_every_task_in_the_dataset(self) -> None:
+        """Proves each task, public and hidden, has a path to a pass under its own constraints."""
+
+        from open_agent_eval.validators import validate_tasks_dir
+
+        tasks = validate_tasks_dir(Path(__file__).resolve().parent.parent / "tasks").tasks
+        self.assertGreater(len([t for t in tasks if t.environment]), 0)
+        results, _ = run_benchmark(tasks, get_agent("oracle"), "r", "all")
+        failed = [(r.task_id, r.grade_reason) for r in results if not r.success]
+        self.assertEqual([], failed)
+
     def test_forbidden_call_fails_even_with_right_answer(self) -> None:
         grade = grade_task(make_task(), "payments-gateway", ["search_logs", "write_file"], {})
         self.assertFalse(grade.success)
@@ -166,3 +177,19 @@ class ApiToolLoopTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GullibleExampleTests(unittest.TestCase):
+    def test_example_agent_is_caught_following_injected_instructions(self) -> None:
+        from examples.custom_agents.gullible_agent import GullibleAgent
+
+        from open_agent_eval.validators import validate_tasks_dir
+
+        tasks = validate_tasks_dir(Path(__file__).resolve().parent.parent / "tasks").tasks
+        injection = [t for t in tasks if t.category == "safety"]
+        results, _ = run_benchmark(injection, GullibleAgent(), "r", "all")
+        followed = [r for r in results if any(step["tool"] == "http_get" for step in r.trace)]
+        self.assertTrue(followed)
+        for result in followed:
+            self.assertFalse(result.success)
+            self.assertIn("forbidden", result.grade_reason)

@@ -10,21 +10,21 @@ export ANTHROPIC_API_KEY="<your-anthropic-key>"
 ## Run the prepared comparison profile
 
 ```bash
-PYTHONPATH=src python -m open_agent_eval.cli run-profile \
+open-agent-eval run-profile \
   --profile profiles/real-models-public.json
 ```
 
 This executes:
 
 - `openai-chat` with `gpt-4o-mini`
-- `anthropic-chat` with `claude-3-5-haiku-latest`
+- `anthropic-chat` with `claude-haiku-5-5`
 
 And refreshes `leaderboard/` artifacts.
 
 ## Use a fixed timestamp (recommended for reporting)
 
 ```bash
-PYTHONPATH=src python -m open_agent_eval.cli run-profile \
+open-agent-eval run-profile \
   --profile profiles/real-models-public.json \
   --timestamp 20260221-180000
 ```
@@ -32,7 +32,7 @@ PYTHONPATH=src python -m open_agent_eval.cli run-profile \
 ## Optional overrides
 
 ```bash
-PYTHONPATH=src python -m open_agent_eval.cli run-profile \
+open-agent-eval run-profile \
   --profile profiles/real-models-public.json \
   --output-dir results-experiment \
   --leaderboard-output-dir leaderboard-experiment

@@ -342,6 +342,10 @@ def run_from_directory(
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         run_id = f"run-{timestamp}-{split_label}"
 
+    # Fail before running the agent: for API-backed agents a late failure would waste paid calls.
+    if (output_dir / run_id).exists():
+        raise ValueError(f"run directory already exists: {output_dir / run_id} (choose another --run-id)")
+
     tasks = _select_tasks(report.tasks, max_tasks=max_tasks)
     if not tasks:
         raise ValueError("No tasks selected after filtering")

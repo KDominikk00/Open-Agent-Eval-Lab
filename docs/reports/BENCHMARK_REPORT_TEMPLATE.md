@@ -79,7 +79,7 @@
 # Example command set used for this report
 export OPENAI_API_KEY="<set-me>"
 export ANTHROPIC_API_KEY="<set-me>"
-PYTHONPATH=src python -m open_agent_eval.cli run-profile \
+open-agent-eval run-profile \
   --profile profiles/real-models-public.json
 ```
 

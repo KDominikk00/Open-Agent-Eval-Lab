@@ -67,6 +67,16 @@ class CliTests(unittest.TestCase):
             code, out = run_cli("run", "--tasks-dir", TASKS, "--output-dir", tmp, "--trials", "0")
             self.assertEqual(1, code)
 
+    def test_existing_run_id_fails_cleanly_before_running_the_agent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = ("run", "--tasks-dir", TASKS, "--output-dir", tmp, "--agent", "oracle", "--run-id", "dup")
+            self.assertEqual(0, run_cli(*args)[0])
+            with patch("open_agent_eval.runner.get_agent") as get_agent:
+                code, out = run_cli(*args)
+            get_agent.assert_not_called()
+        self.assertEqual(1, code)
+        self.assertIn("already exists", out)
+
     def test_run_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             code, out = run_cli(

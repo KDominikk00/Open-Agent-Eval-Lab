@@ -24,3 +24,4 @@ run tool-hint 1
 run instruction-snippet 1
 
 $CLI leaderboard --results-dir "$OUT" --output-dir benchmarks/site
+python scripts/render_chart.py "$OUT" docs/assets/results.svg

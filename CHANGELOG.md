@@ -14,14 +14,21 @@ All notable changes to this project are documented in this file.
 - `--trials` for repeated runs, `--label` for tagging runs, Wilson and bootstrap confidence intervals, per-category/difficulty/grader breakdowns (`breakdowns.json`).
 - Leaderboard: ranked agents with 95% CIs, category heatmap, trace viewer (`traces.html`); `smoke` runs hidden unless `--include-smoke`.
 - Committed baseline snapshot in `benchmarks/published/` (`scripts/publish_baselines.sh`) used by the Pages deploy.
+- Ruff, strict mypy, pytest with an 85% coverage gate, a Python 3.10-3.13 CI matrix, a snapshot-freshness CI job, `Makefile` and pre-commit config.
+- `GullibleAgent` example showing the benchmark catching an agent that obeys instructions found in documents.
+- `docs/ARCHITECTURE.md`, `docs/DATASET.md`, `docs/DESIGN_DECISIONS.md`; results chart rendered from the committed snapshot.
 
 ### Changed
 
 - Validation rejects tasks whose `expected_response` fails their own grader.
 - `RunSummary.total_tasks` counts unique tasks; `total_attempts` counts task x trial attempts and `passed_tasks` counts passed attempts.
+- Default Anthropic model is now `claude-haiku-5-5` (was `claude-3-5-haiku-latest`).
+- README rewritten; `ROADMAP.md` and `docs/RELEASE_CHECKLIST.md` folded into `CONTRIBUTING.md`.
 
 ### Fixed
 
+- Re-using a `--run-id` now fails immediately with a clear message instead of crashing after the agent has run.
+- Blank `OPENAI_MODEL` / `ANTHROPIC_MODEL` environment variables fall back to the default model.
 - `public.security.parameterized-query` reference answer did not satisfy its grader.
 
 ## [0.4.0] - 2026-02-21

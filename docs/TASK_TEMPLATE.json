@@ -1,19 +1,34 @@
 {
-  "task_id": "public.category.unique-task-name",
+  "task_id": "public.debugging.unique-task-name",
   "title": "Task title",
-  "category": "api_usage",
+  "category": "debugging",
   "split": "public",
   "difficulty": "medium",
-  "instructions": "Clear instruction for what the agent should output.",
-  "expected_response": "Expected response text or JSON string",
-  "required_tools": ["optional_tool_a", "optional_tool_b"],
-  "max_steps": 6,
-  "tags": ["optional", "labels"],
+  "instructions": "What the agent must do. For tool tasks, say what to investigate and what to report.",
+  "expected_response": "Reference answer; it must satisfy the grader below (validation enforces this)",
+  "max_steps": 4,
+  "tags": ["logs", "root-cause"],
+
+  "environment": {
+    "logs": ["INFO ok", "ERROR timeout calling payments-gateway after 30s"],
+    "files": {"notes.txt": "optional in-memory files"},
+    "tables": {"orders": [{"order_id": 1, "customer": "acme", "amount": 120}]},
+    "http": {"https://api.example.com/ping": "{\"ok\": true}"}
+  },
+  "tools": ["search_logs", "read_file"],
+  "reference_trajectory": [
+    {"tool": "search_logs", "args": {"query": "timeout"}}
+  ],
+
   "grader": {
-    "type": "exact",
+    "type": "contains",
+    "needles": ["payments-gateway"],
     "ignore_case": true,
     "collapse_whitespace": true,
-    "needles": [],
-    "allow_extra_keys": false
+    "required_calls": ["search_logs"],
+    "call_order": [],
+    "forbidden_calls": ["write_file"],
+    "forbidden_needles": [],
+    "final_files": {}
   }
 }

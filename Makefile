@@ -20,6 +20,7 @@ baselines:
 
 # Run one agent end to end and open the report.
 demo:
+	rm -rf results/demo
 	open-agent-eval run --tasks-dir tasks --output-dir results --agent keyword-retriever \
 		--split public --label smoke --run-id demo
 	open-agent-eval leaderboard --results-dir results --output-dir leaderboard --include-smoke

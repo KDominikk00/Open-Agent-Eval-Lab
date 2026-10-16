@@ -74,6 +74,7 @@ ignore = ["RUF001", "SIM108"]
 # Inline HTML/CSS templates are not worth reflowing.
 "src/open_agent_eval/leaderboard.py" = ["E501"]
 "src/open_agent_eval/policies.py" = ["E501"]
+"scripts/render_chart.py" = ["E501"]
 "tests/*" = ["E501"]
 
 [tool.mypy]
