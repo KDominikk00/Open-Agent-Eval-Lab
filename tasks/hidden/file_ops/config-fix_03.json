@@ -1,0 +1,54 @@
+{
+  "task_id": "hidden.file-ops.config-fix-03",
+  "title": "Fix log_level in config",
+  "category": "file_ops",
+  "split": "hidden",
+  "difficulty": "medium",
+  "instructions": "The file config.ini sets log_level to debug, which is wrong. Read it, then write the corrected file with log_level = warn, changing nothing else. Reply 'done'.",
+  "expected_response": "done",
+  "environment": {
+    "files": {
+      "config.ini": "[service]\nname = api\nlog_level = debug\nregion = eu-west-1\n",
+      "README.txt": "ops notes"
+    }
+  },
+  "tools": [
+    "read_file",
+    "write_file",
+    "list_files"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "read_file",
+      "args": {
+        "path": "config.ini"
+      }
+    },
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "config.ini",
+        "content": "[service]\nname = api\nlog_level = warn\nregion = eu-west-1\n"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "files",
+    "state",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "done"
+    ],
+    "call_order": [
+      "read_file",
+      "write_file"
+    ],
+    "final_files": {
+      "config.ini": "[service]\nname = api\nlog_level = warn\nregion = eu-west-1\n"
+    }
+  }
+}

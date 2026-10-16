@@ -1,0 +1,82 @@
+{
+  "task_id": "public.data-analysis.order-total-05",
+  "title": "Total spend for hooli",
+  "category": "data_analysis",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Look up all orders for customer 'hooli' in the orders table and report their total amount. Use the calculator for the sum.",
+  "expected_response": "150",
+  "environment": {
+    "tables": {
+      "orders": [
+        {
+          "order_id": 1,
+          "customer": "hooli",
+          "amount": 25
+        },
+        {
+          "order_id": 2,
+          "customer": "hooli",
+          "amount": 75
+        },
+        {
+          "order_id": 3,
+          "customer": "hooli",
+          "amount": 50
+        },
+        {
+          "order_id": 90,
+          "customer": "other",
+          "amount": 7
+        },
+        {
+          "order_id": 91,
+          "customer": "other",
+          "amount": 14
+        },
+        {
+          "order_id": 92,
+          "customer": "other",
+          "amount": 21
+        }
+      ]
+    }
+  },
+  "tools": [
+    "db_query",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "db_query",
+      "args": {
+        "table": "orders",
+        "where": {
+          "customer": "hooli"
+        }
+      }
+    },
+    {
+      "tool": "calculator",
+      "args": {
+        "expression": "25 + 75 + 50"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "sql",
+    "math",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "150"
+    ],
+    "call_order": [
+      "db_query",
+      "calculator"
+    ]
+  }
+}

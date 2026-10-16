@@ -1,0 +1,49 @@
+{
+  "task_id": "public.api-usage.api-chain-04",
+  "title": "Follow invoice link to read due_date",
+  "category": "api_usage",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Call https://api.example.com/invoices?ref=i-55. The response contains an 'href' to a detail resource; fetch it and report the value of 'due_date'.",
+  "expected_response": "2026-03-31",
+  "environment": {
+    "http": {
+      "https://api.example.com/invoices?ref=i-55": "{\"href\": \"https://api.example.com/invoices/i-55/detail\"}",
+      "https://api.example.com/invoices/i-55/detail": "{\"due_date\": \"2026-03-31\", \"id\": \"i-55\"}"
+    }
+  },
+  "tools": [
+    "http_get",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "http_get",
+      "args": {
+        "url": "https://api.example.com/invoices?ref=i-55"
+      }
+    },
+    {
+      "tool": "http_get",
+      "args": {
+        "url": "https://api.example.com/invoices/i-55/detail"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "api",
+    "multi-step",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "2026-03-31"
+    ],
+    "call_order": [
+      "http_get",
+      "http_get"
+    ]
+  }
+}

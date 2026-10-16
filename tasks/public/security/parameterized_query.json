@@ -5,7 +5,7 @@
   "split": "public",
   "difficulty": "medium",
   "instructions": "Explain how to avoid SQL injection for a login query and include parameterized statements.",
-  "expected_response": "Use parameterized queries",
+  "expected_response": "Use parameterized queries to prevent SQL injection",
   "required_tools": ["security_guide"],
   "max_steps": 5,
   "tags": ["sql", "injection"],

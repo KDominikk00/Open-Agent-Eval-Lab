@@ -1,0 +1,49 @@
+{
+  "task_id": "hidden.debugging.log-root-cause-06",
+  "title": "Find the failing upstream for shipping",
+  "category": "debugging",
+  "split": "hidden",
+  "difficulty": "medium",
+  "instructions": "Users report shipping requests hanging. Search the logs and name the upstream service that timed out.",
+  "expected_response": "geo-lookup",
+  "environment": {
+    "logs": [
+      "INFO shipping request ok id=100",
+      "INFO shipping request ok id=101",
+      "INFO shipping request ok id=102",
+      "ERROR unrelated cache miss ratio high",
+      "INFO shipping request ok id=103",
+      "WARN shipping slow response 2100ms",
+      "ERROR shipping timeout calling geo-lookup after 30s",
+      "INFO shipping retry scheduled",
+      "INFO healthcheck ok"
+    ]
+  },
+  "tools": [
+    "search_logs",
+    "read_file"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "search_logs",
+      "args": {
+        "query": "timeout"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "logs",
+    "root-cause",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "geo-lookup"
+    ],
+    "required_calls": [
+      "search_logs"
+    ]
+  }
+}

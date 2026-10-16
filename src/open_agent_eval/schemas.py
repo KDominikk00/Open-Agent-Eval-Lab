@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from open_agent_eval.tools import KNOWN_TOOLS, validate_environment_spec
+
 ALLOWED_SPLITS = {"public", "hidden"}
 ALLOWED_DIFFICULTIES = {"easy", "medium", "hard"}
 ALLOWED_GRADER_TYPES = {"exact", "contains", "json"}
@@ -24,6 +26,11 @@ class GraderSpec:
     collapse_whitespace: bool = True
     needles: list[str] = field(default_factory=list)
     allow_extra_keys: bool = False
+    forbidden_needles: list[str] = field(default_factory=list)
+    required_calls: list[str] = field(default_factory=list)
+    call_order: list[str] = field(default_factory=list)
+    forbidden_calls: list[str] = field(default_factory=list)
+    final_files: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -41,6 +48,9 @@ class TaskSpec:
     max_steps: int = 6
     tags: list[str] = field(default_factory=list)
     grader: GraderSpec = field(default_factory=GraderSpec)
+    environment: dict[str, Any] = field(default_factory=dict)
+    tools: list[str] = field(default_factory=list)
+    reference_trajectory: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _require_string(record: dict[str, Any], key: str, source: Path) -> str:
@@ -57,6 +67,44 @@ def _optional_string_list(record: dict[str, Any], key: str, source: Path) -> lis
     if not isinstance(value, list) or any(not isinstance(item, str) or not item.strip() for item in value):
         raise TaskSchemaError(f"{source}: '{key}' must be a list of non-empty strings")
     return [item.strip() for item in value]
+
+
+def _tool_name_list(record: dict[str, Any], key: str, source: Path) -> list[str]:
+    names = _optional_string_list(record, key, source)
+    unknown = [name for name in names if name not in KNOWN_TOOLS]
+    if unknown:
+        raise TaskSchemaError(f"{source}: grader.{key} references unknown tool(s): {', '.join(unknown)}")
+    return names
+
+
+def _parse_episode_fields(
+    record: dict[str, Any], source: Path
+) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
+    environment = record.get("environment", {})
+    problem = validate_environment_spec(environment)
+    if problem:
+        raise TaskSchemaError(f"{source}: {problem}")
+
+    tools = _tool_name_list(record, "tools", source)
+    trajectory = record.get("reference_trajectory", [])
+    if not isinstance(trajectory, list) or any(
+        not isinstance(step, dict)
+        or step.get("tool") not in KNOWN_TOOLS
+        or not isinstance(step.get("args", {}), dict)
+        for step in trajectory
+    ):
+        raise TaskSchemaError(
+            f"{source}: reference_trajectory must be a list of {{tool, args}} objects with known tools"
+        )
+    if (tools or trajectory) and not environment:
+        raise TaskSchemaError(f"{source}: 'tools' and 'reference_trajectory' require an 'environment'")
+    if tools:
+        unavailable = [s["tool"] for s in trajectory if s["tool"] not in tools]
+        if unavailable:
+            raise TaskSchemaError(
+                f"{source}: reference_trajectory uses tool(s) not in 'tools': {', '.join(unavailable)}"
+            )
+    return dict(environment), tools, [dict(step) for step in trajectory]
 
 
 def _optional_positive_int(record: dict[str, Any], key: str, source: Path, default: int) -> int:
@@ -136,8 +184,21 @@ def _parse_grader(record: dict[str, Any], source: Path) -> GraderSpec:
     if grader_type != "json" and allow_extra_keys:
         raise TaskSchemaError(f"{source}: grader.allow_extra_keys is only valid for json grader")
 
+    trace_lists = {
+        key: _tool_name_list(raw, key, source)
+        for key in ("required_calls", "call_order", "forbidden_calls")
+    }
+    final_files = raw.get("final_files", {})
+    if not isinstance(final_files, dict) or any(
+        not isinstance(k, str) or not isinstance(v, str) for k, v in final_files.items()
+    ):
+        raise TaskSchemaError(f"{source}: grader.final_files must map file paths to strings")
+
     return GraderSpec(
         type=grader_type,
+        forbidden_needles=_optional_string_list(raw, "forbidden_needles", source),
+        final_files=dict(final_files),
+        **trace_lists,
         ignore_case=ignore_case,
         collapse_whitespace=collapse_whitespace,
         needles=needles,
@@ -151,6 +212,8 @@ def task_from_dict(record: dict[str, Any], source: Path, inferred_split: str | N
     if not isinstance(record, dict):
         raise TaskSchemaError(f"{source}: root JSON value must be an object")
 
+    environment, tools, trajectory = _parse_episode_fields(record, source)
+
     return TaskSpec(
         task_id=_require_string(record, "task_id", source),
         title=_require_string(record, "title", source),
@@ -163,4 +226,7 @@ def task_from_dict(record: dict[str, Any], source: Path, inferred_split: str | N
         max_steps=_optional_positive_int(record, "max_steps", source, default=6),
         tags=_optional_string_list(record, "tags", source),
         grader=_parse_grader(record, source),
+        environment=environment,
+        tools=tools,
+        reference_trajectory=trajectory,
     )

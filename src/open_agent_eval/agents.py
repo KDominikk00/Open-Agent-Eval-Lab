@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import importlib
 import inspect
 import json
@@ -10,7 +10,16 @@ import os
 from typing import Any, Callable, Protocol
 from urllib import error, request
 
+from open_agent_eval.episode import (
+    Action,
+    EpisodeResult,
+    FinalAnswer,
+    ToolCall,
+    TraceStep,
+    run_episode,
+)
 from open_agent_eval.schemas import TaskSpec
+from open_agent_eval.tools import KNOWN_TOOLS, TOOL_SPECS
 
 
 @dataclass(frozen=True)
@@ -20,6 +29,20 @@ class AgentOutput:
     response: str
     tool_calls: list[str]
     steps: int
+    trace: list[dict[str, Any]] = field(default_factory=list)
+    final_files: dict[str, str] = field(default_factory=dict)
+
+
+def output_from_episode(result: EpisodeResult) -> AgentOutput:
+    """Convert an episode result into the flat ``AgentOutput`` consumed by the runner."""
+
+    return AgentOutput(
+        response=result.response,
+        tool_calls=[step.tool for step in result.trace],
+        steps=result.steps,
+        trace=result.trace_as_dicts(),
+        final_files=result.final_files,
+    )
 
 
 class Agent(Protocol):
@@ -106,6 +129,30 @@ def _task_prompt(task: TaskSpec) -> str:
     )
 
 
+def _episode_tool_names(task: TaskSpec) -> list[str]:
+    return sorted(task.tools) if task.tools else sorted(KNOWN_TOOLS)
+
+
+def _episode_prompt(task: TaskSpec) -> str:
+    return (
+        "Solve the following task using the provided tools when helpful. "
+        "When you are done, reply with only the final answer and no tool call.\n"
+        f"Task ID: {task.task_id}\nInstructions: {task.instructions}"
+    )
+
+
+def _parse_arguments(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
 def _post_json(
     *, url: str, payload: dict[str, Any], headers: dict[str, str], timeout_seconds: float
 ) -> dict[str, Any]:
@@ -190,12 +237,32 @@ class OpenAIChatAgent:
     api_key: str | None = None
     endpoint: str = "https://api.openai.com/v1/chat/completions"
 
-    def run(self, task: TaskSpec) -> AgentOutput:
-        model = self.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    def _headers(self) -> dict[str, str]:
         api_key = _resolve_api_key(explicit_key=self.api_key, env_name="OPENAI_API_KEY")
+        return {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+    def _model(self) -> str:
+        return self.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    @staticmethod
+    def _first_message(response: dict[str, Any]) -> dict[str, Any]:
+        choices = response.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise ValueError("OpenAI response missing choices")
+        choice = choices[0]
+        if not isinstance(choice, dict):
+            raise ValueError("OpenAI response choice is malformed")
+        message = choice.get("message")
+        if not isinstance(message, dict):
+            raise ValueError("OpenAI response missing message payload")
+        return message
+
+    def run(self, task: TaskSpec) -> AgentOutput:
+        if task.environment:
+            return output_from_episode(run_episode(task, self))
 
         payload: dict[str, Any] = {
-            "model": model,
+            "model": self._model(),
             "messages": [
                 {
                     "role": "system",
@@ -210,29 +277,73 @@ class OpenAIChatAgent:
         response = _post_json(
             url=self.endpoint,
             payload=payload,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=self._headers(),
             timeout_seconds=self.timeout_seconds,
         )
 
-        choices = response.get("choices")
-        if not isinstance(choices, list) or not choices:
-            raise ValueError("OpenAI response missing choices")
-        choice = choices[0]
-        if not isinstance(choice, dict):
-            raise ValueError("OpenAI response choice is malformed")
-
-        message = choice.get("message")
-        if not isinstance(message, dict):
-            raise ValueError("OpenAI response missing message payload")
-
+        message = self._first_message(response)
         response_text = _extract_openai_content(message.get("content"))
         tool_calls = _extract_tool_calls_openai(message)
         steps = min(task.max_steps, max(1, len(tool_calls) + 1))
 
         return AgentOutput(response=response_text, tool_calls=tool_calls, steps=steps)
+
+    def decide(self, task: TaskSpec, history: list[TraceStep]) -> Action:
+        """One turn of a native tool-calling conversation, rebuilt from the trace."""
+
+        messages: list[dict[str, Any]] = [
+            {"role": "system", "content": "You are an evaluation agent. Use tools, then answer concisely."},
+            {"role": "user", "content": _episode_prompt(task)},
+        ]
+        for index, step in enumerate(history):
+            call_id = f"call_{index}"
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": call_id,
+                            "type": "function",
+                            "function": {"name": step.tool, "arguments": json.dumps(step.args)},
+                        }
+                    ],
+                }
+            )
+            messages.append({"role": "tool", "tool_call_id": call_id, "content": step.observation})
+
+        payload: dict[str, Any] = {
+            "model": self._model(),
+            "messages": messages,
+            "tools": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": TOOL_SPECS[name]["description"],
+                        "parameters": TOOL_SPECS[name]["parameters"],
+                    },
+                }
+                for name in _episode_tool_names(task)
+            ],
+            "parallel_tool_calls": False,
+            "temperature": self.temperature,
+            "max_tokens": self.max_output_tokens,
+        }
+        response = _post_json(
+            url=self.endpoint,
+            payload=payload,
+            headers=self._headers(),
+            timeout_seconds=self.timeout_seconds,
+        )
+        message = self._first_message(response)
+
+        raw_calls = message.get("tool_calls")
+        if isinstance(raw_calls, list) and raw_calls and isinstance(raw_calls[0], dict):
+            function = raw_calls[0].get("function")
+            if isinstance(function, dict) and isinstance(function.get("name"), str):
+                return ToolCall(function["name"], _parse_arguments(function.get("arguments")))
+        return FinalAnswer(_extract_openai_content(message.get("content")))
 
 
 def _extract_anthropic_content(content: Any) -> tuple[str, list[str]]:
@@ -272,12 +383,23 @@ class AnthropicChatAgent:
     endpoint: str = "https://api.anthropic.com/v1/messages"
     anthropic_version: str = "2023-06-01"
 
-    def run(self, task: TaskSpec) -> AgentOutput:
-        model = self.model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-haiku-latest")
+    def _headers(self) -> dict[str, str]:
         api_key = _resolve_api_key(explicit_key=self.api_key, env_name="ANTHROPIC_API_KEY")
+        return {
+            "x-api-key": api_key,
+            "anthropic-version": self.anthropic_version,
+            "Content-Type": "application/json",
+        }
+
+    def _model(self) -> str:
+        return self.model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-haiku-latest")
+
+    def run(self, task: TaskSpec) -> AgentOutput:
+        if task.environment:
+            return output_from_episode(run_episode(task, self))
 
         payload: dict[str, Any] = {
-            "model": model,
+            "model": self._model(),
             "max_tokens": self.max_output_tokens,
             "temperature": self.temperature,
             "messages": [{"role": "user", "content": _task_prompt(task)}],
@@ -286,11 +408,7 @@ class AnthropicChatAgent:
         response = _post_json(
             url=self.endpoint,
             payload=payload,
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": self.anthropic_version,
-                "Content-Type": "application/json",
-            },
+            headers=self._headers(),
             timeout_seconds=self.timeout_seconds,
         )
 
@@ -301,13 +419,74 @@ class AnthropicChatAgent:
         steps = min(task.max_steps, max(1, len(tool_calls) + 1))
         return AgentOutput(response=response_text, tool_calls=tool_calls, steps=steps)
 
+    def decide(self, task: TaskSpec, history: list[TraceStep]) -> Action:
+        """One turn of a native tool-use conversation, rebuilt from the trace."""
+
+        messages: list[dict[str, Any]] = [{"role": "user", "content": _episode_prompt(task)}]
+        for index, step in enumerate(history):
+            tool_id = f"toolu_{index}"
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": [{"type": "tool_use", "id": tool_id, "name": step.tool, "input": step.args}],
+                }
+            )
+            messages.append(
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": tool_id,
+                            "content": step.observation,
+                            "is_error": step.is_error,
+                        }
+                    ],
+                }
+            )
+
+        payload: dict[str, Any] = {
+            "model": self._model(),
+            "max_tokens": self.max_output_tokens,
+            "temperature": self.temperature,
+            "messages": messages,
+            "tools": [
+                {
+                    "name": name,
+                    "description": TOOL_SPECS[name]["description"],
+                    "input_schema": TOOL_SPECS[name]["parameters"],
+                }
+                for name in _episode_tool_names(task)
+            ],
+        }
+        response = _post_json(
+            url=self.endpoint,
+            payload=payload,
+            headers=self._headers(),
+            timeout_seconds=self.timeout_seconds,
+        )
+
+        content = response.get("content")
+        if not isinstance(content, list) or not content:
+            raise ValueError("Anthropic response missing content blocks")
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "tool_use" and isinstance(block.get("name"), str):
+                return ToolCall(block["name"], _parse_arguments(block.get("input")))
+        text, _ = _extract_anthropic_content(content)
+        return FinalAnswer(text)
+
 
 def _registry() -> dict[str, Agent]:
     return {name: factory() for name, factory in _builtin_agent_factories().items()}
 
 
 def _builtin_agent_factories() -> dict[str, Callable[..., Agent]]:
+    from open_agent_eval.policies import KeywordRetrieverAgent, OracleAgent, RandomAgent
+
     return {
+        "oracle": lambda **_: OracleAgent(),
+        "keyword-retriever": lambda **_: KeywordRetrieverAgent(),
+        "random": lambda **_: RandomAgent(),
         "echo-reference": lambda **_: EchoReferenceAgent(),
         "instruction-snippet": lambda **_: InstructionSnippetAgent(),
         "tool-hint": lambda **_: ToolHintAgent(),

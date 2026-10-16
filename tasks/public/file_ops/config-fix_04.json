@@ -1,0 +1,54 @@
+{
+  "task_id": "public.file-ops.config-fix-04",
+  "title": "Fix max_connections in config",
+  "category": "file_ops",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "The file config.ini sets max_connections to 2, which is wrong. Read it, then write the corrected file with max_connections = 50, changing nothing else. Reply 'done'.",
+  "expected_response": "done",
+  "environment": {
+    "files": {
+      "config.ini": "[service]\nname = api\nmax_connections = 2\nregion = eu-west-1\n",
+      "README.txt": "ops notes"
+    }
+  },
+  "tools": [
+    "read_file",
+    "write_file",
+    "list_files"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "read_file",
+      "args": {
+        "path": "config.ini"
+      }
+    },
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "config.ini",
+        "content": "[service]\nname = api\nmax_connections = 50\nregion = eu-west-1\n"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "files",
+    "state",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "done"
+    ],
+    "call_order": [
+      "read_file",
+      "write_file"
+    ],
+    "final_files": {
+      "config.ini": "[service]\nname = api\nmax_connections = 50\nregion = eu-west-1\n"
+    }
+  }
+}

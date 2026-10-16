@@ -6,6 +6,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from open_agent_eval.graders import grade_response
 from open_agent_eval.schemas import ALLOWED_SPLITS, TaskSchemaError, TaskSpec, task_from_dict
 
 
@@ -83,6 +84,13 @@ def validate_tasks_dir(tasks_dir: Path, only_split: str | None = None) -> Valida
             task = task_from_dict(raw, task_file, inferred_split=inferred_split)
         except TaskSchemaError as exc:
             report.issues.append(ValidationIssue(task_file, str(exc)))
+            continue
+
+        reference = grade_response(task, task.expected_response)
+        if not reference.success:
+            report.issues.append(
+                ValidationIssue(task_file, f"expected_response fails its own grader: {reference.reason}")
+            )
             continue
 
         if task.task_id in seen_ids:

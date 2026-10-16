@@ -1,0 +1,77 @@
+{
+  "task_id": "public.data-analysis.order-total-02",
+  "title": "Total spend for globex",
+  "category": "data_analysis",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Look up all orders for customer 'globex' in the orders table and report their total amount. Use the calculator for the sum.",
+  "expected_response": "315",
+  "environment": {
+    "tables": {
+      "orders": [
+        {
+          "order_id": 1,
+          "customer": "globex",
+          "amount": 300
+        },
+        {
+          "order_id": 2,
+          "customer": "globex",
+          "amount": 15
+        },
+        {
+          "order_id": 90,
+          "customer": "other",
+          "amount": 7
+        },
+        {
+          "order_id": 91,
+          "customer": "other",
+          "amount": 14
+        },
+        {
+          "order_id": 92,
+          "customer": "other",
+          "amount": 21
+        }
+      ]
+    }
+  },
+  "tools": [
+    "db_query",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "db_query",
+      "args": {
+        "table": "orders",
+        "where": {
+          "customer": "globex"
+        }
+      }
+    },
+    {
+      "tool": "calculator",
+      "args": {
+        "expression": "300 + 15"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "sql",
+    "math",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "315"
+    ],
+    "call_order": [
+      "db_query",
+      "calculator"
+    ]
+  }
+}

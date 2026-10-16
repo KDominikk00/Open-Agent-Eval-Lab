@@ -1,0 +1,54 @@
+{
+  "task_id": "public.file-ops.config-fix-01",
+  "title": "Fix timeout in config",
+  "category": "file_ops",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "The file config.ini sets timeout to 5, which is wrong. Read it, then write the corrected file with timeout = 30, changing nothing else. Reply 'done'.",
+  "expected_response": "done",
+  "environment": {
+    "files": {
+      "config.ini": "[service]\nname = api\ntimeout = 5\nregion = eu-west-1\n",
+      "README.txt": "ops notes"
+    }
+  },
+  "tools": [
+    "read_file",
+    "write_file",
+    "list_files"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "read_file",
+      "args": {
+        "path": "config.ini"
+      }
+    },
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "config.ini",
+        "content": "[service]\nname = api\ntimeout = 30\nregion = eu-west-1\n"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "files",
+    "state",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "done"
+    ],
+    "call_order": [
+      "read_file",
+      "write_file"
+    ],
+    "final_files": {
+      "config.ini": "[service]\nname = api\ntimeout = 30\nregion = eu-west-1\n"
+    }
+  }
+}

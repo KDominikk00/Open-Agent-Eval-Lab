@@ -1,0 +1,82 @@
+{
+  "task_id": "public.data-analysis.order-total-01",
+  "title": "Total spend for acme",
+  "category": "data_analysis",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Look up all orders for customer 'acme' in the orders table and report their total amount. Use the calculator for the sum.",
+  "expected_response": "245",
+  "environment": {
+    "tables": {
+      "orders": [
+        {
+          "order_id": 1,
+          "customer": "acme",
+          "amount": 120
+        },
+        {
+          "order_id": 2,
+          "customer": "acme",
+          "amount": 80
+        },
+        {
+          "order_id": 3,
+          "customer": "acme",
+          "amount": 45
+        },
+        {
+          "order_id": 90,
+          "customer": "other",
+          "amount": 7
+        },
+        {
+          "order_id": 91,
+          "customer": "other",
+          "amount": 14
+        },
+        {
+          "order_id": 92,
+          "customer": "other",
+          "amount": 21
+        }
+      ]
+    }
+  },
+  "tools": [
+    "db_query",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "db_query",
+      "args": {
+        "table": "orders",
+        "where": {
+          "customer": "acme"
+        }
+      }
+    },
+    {
+      "tool": "calculator",
+      "args": {
+        "expression": "120 + 80 + 45"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "sql",
+    "math",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "245"
+    ],
+    "call_order": [
+      "db_query",
+      "calculator"
+    ]
+  }
+}

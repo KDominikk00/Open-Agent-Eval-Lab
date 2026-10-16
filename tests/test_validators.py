@@ -119,5 +119,30 @@ class ValidatorTests(unittest.TestCase):
             self.assertEqual("task.public", report.tasks[0].task_id)
 
 
+class ReferenceConsistencyTests(unittest.TestCase):
+    def test_rejects_task_whose_reference_fails_its_grader(self) -> None:
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from open_agent_eval.validators import validate_tasks_dir
+
+        record = {
+            "task_id": "public.x.bad",
+            "title": "t",
+            "category": "x",
+            "instructions": "i",
+            "expected_response": "alpha",
+            "grader": {"type": "contains", "needles": ["beta"]},
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "public" / "x"
+            path.mkdir(parents=True)
+            (path / "bad.json").write_text(json.dumps(record))
+            report = validate_tasks_dir(Path(tmp))
+        self.assertFalse(report.is_valid)
+        self.assertIn("fails its own grader", report.issues[0].message)
+
+
 if __name__ == "__main__":
     unittest.main()

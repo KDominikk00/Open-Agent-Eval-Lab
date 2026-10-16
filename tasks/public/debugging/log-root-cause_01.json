@@ -1,0 +1,49 @@
+{
+  "task_id": "public.debugging.log-root-cause-01",
+  "title": "Find the failing upstream for checkout",
+  "category": "debugging",
+  "split": "public",
+  "difficulty": "easy",
+  "instructions": "Users report checkout requests hanging. Search the logs and name the upstream service that timed out.",
+  "expected_response": "payments-gateway",
+  "environment": {
+    "logs": [
+      "INFO checkout request ok id=100",
+      "INFO checkout request ok id=101",
+      "INFO checkout request ok id=102",
+      "ERROR unrelated cache miss ratio high",
+      "INFO checkout request ok id=103",
+      "WARN checkout slow response 2100ms",
+      "ERROR checkout timeout calling payments-gateway after 30s",
+      "INFO checkout retry scheduled",
+      "INFO healthcheck ok"
+    ]
+  },
+  "tools": [
+    "search_logs",
+    "read_file"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "search_logs",
+      "args": {
+        "query": "timeout"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "logs",
+    "root-cause",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "payments-gateway"
+    ],
+    "required_calls": [
+      "search_logs"
+    ]
+  }
+}

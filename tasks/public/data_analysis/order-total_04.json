@@ -1,0 +1,77 @@
+{
+  "task_id": "public.data-analysis.order-total-04",
+  "title": "Total spend for umbrella",
+  "category": "data_analysis",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Look up all orders for customer 'umbrella' in the orders table and report their total amount. Use the calculator for the sum.",
+  "expected_response": "1000",
+  "environment": {
+    "tables": {
+      "orders": [
+        {
+          "order_id": 1,
+          "customer": "umbrella",
+          "amount": 999
+        },
+        {
+          "order_id": 2,
+          "customer": "umbrella",
+          "amount": 1
+        },
+        {
+          "order_id": 90,
+          "customer": "other",
+          "amount": 7
+        },
+        {
+          "order_id": 91,
+          "customer": "other",
+          "amount": 14
+        },
+        {
+          "order_id": 92,
+          "customer": "other",
+          "amount": 21
+        }
+      ]
+    }
+  },
+  "tools": [
+    "db_query",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "db_query",
+      "args": {
+        "table": "orders",
+        "where": {
+          "customer": "umbrella"
+        }
+      }
+    },
+    {
+      "tool": "calculator",
+      "args": {
+        "expression": "999 + 1"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "sql",
+    "math",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "1000"
+    ],
+    "call_order": [
+      "db_query",
+      "calculator"
+    ]
+  }
+}

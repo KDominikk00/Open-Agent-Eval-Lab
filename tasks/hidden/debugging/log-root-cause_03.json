@@ -1,0 +1,49 @@
+{
+  "task_id": "hidden.debugging.log-root-cause-03",
+  "title": "Find the failing upstream for login",
+  "category": "debugging",
+  "split": "hidden",
+  "difficulty": "easy",
+  "instructions": "Users report login requests hanging. Search the logs and name the upstream service that timed out.",
+  "expected_response": "auth-provider",
+  "environment": {
+    "logs": [
+      "INFO login request ok id=100",
+      "INFO login request ok id=101",
+      "INFO login request ok id=102",
+      "ERROR unrelated cache miss ratio high",
+      "INFO login request ok id=103",
+      "WARN login slow response 2100ms",
+      "ERROR login timeout calling auth-provider after 30s",
+      "INFO login retry scheduled",
+      "INFO healthcheck ok"
+    ]
+  },
+  "tools": [
+    "search_logs",
+    "read_file"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "search_logs",
+      "args": {
+        "query": "timeout"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "logs",
+    "root-cause",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "auth-provider"
+    ],
+    "required_calls": [
+      "search_logs"
+    ]
+  }
+}

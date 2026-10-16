@@ -1,0 +1,87 @@
+{
+  "task_id": "hidden.data-analysis.order-total-03",
+  "title": "Total spend for initech",
+  "category": "data_analysis",
+  "split": "hidden",
+  "difficulty": "medium",
+  "instructions": "Look up all orders for customer 'initech' in the orders table and report their total amount. Use the calculator for the sum.",
+  "expected_response": "190",
+  "environment": {
+    "tables": {
+      "orders": [
+        {
+          "order_id": 1,
+          "customer": "initech",
+          "amount": 60
+        },
+        {
+          "order_id": 2,
+          "customer": "initech",
+          "amount": 60
+        },
+        {
+          "order_id": 3,
+          "customer": "initech",
+          "amount": 60
+        },
+        {
+          "order_id": 4,
+          "customer": "initech",
+          "amount": 10
+        },
+        {
+          "order_id": 90,
+          "customer": "other",
+          "amount": 7
+        },
+        {
+          "order_id": 91,
+          "customer": "other",
+          "amount": 14
+        },
+        {
+          "order_id": 92,
+          "customer": "other",
+          "amount": 21
+        }
+      ]
+    }
+  },
+  "tools": [
+    "db_query",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "db_query",
+      "args": {
+        "table": "orders",
+        "where": {
+          "customer": "initech"
+        }
+      }
+    },
+    {
+      "tool": "calculator",
+      "args": {
+        "expression": "60 + 60 + 60 + 10"
+      }
+    }
+  ],
+  "max_steps": 5,
+  "tags": [
+    "sql",
+    "math",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "190"
+    ],
+    "call_order": [
+      "db_query",
+      "calculator"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "task_id": "public.debugging.log-root-cause-02",
+  "title": "Find the failing upstream for cart",
+  "category": "debugging",
+  "split": "public",
+  "difficulty": "easy",
+  "instructions": "Users report cart requests hanging. Search the logs and name the upstream service that timed out.",
+  "expected_response": "inventory-service",
+  "environment": {
+    "logs": [
+      "INFO cart request ok id=100",
+      "INFO cart request ok id=101",
+      "INFO cart request ok id=102",
+      "ERROR unrelated cache miss ratio high",
+      "INFO cart request ok id=103",
+      "WARN cart slow response 2100ms",
+      "ERROR cart timeout calling inventory-service after 30s",
+      "INFO cart retry scheduled",
+      "INFO healthcheck ok"
+    ]
+  },
+  "tools": [
+    "search_logs",
+    "read_file"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "search_logs",
+      "args": {
+        "query": "timeout"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "logs",
+    "root-cause",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "inventory-service"
+    ],
+    "required_calls": [
+      "search_logs"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "task_id": "public.api-usage.api-chain-02",
+  "title": "Follow order link to read status",
+  "category": "api_usage",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Call https://api.example.com/orders?ref=o-204. The response contains an 'href' to a detail resource; fetch it and report the value of 'status'.",
+  "expected_response": "shipped",
+  "environment": {
+    "http": {
+      "https://api.example.com/orders?ref=o-204": "{\"href\": \"https://api.example.com/orders/o-204/detail\"}",
+      "https://api.example.com/orders/o-204/detail": "{\"status\": \"shipped\", \"id\": \"o-204\"}"
+    }
+  },
+  "tools": [
+    "http_get",
+    "calculator"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "http_get",
+      "args": {
+        "url": "https://api.example.com/orders?ref=o-204"
+      }
+    },
+    {
+      "tool": "http_get",
+      "args": {
+        "url": "https://api.example.com/orders/o-204/detail"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "api",
+    "multi-step",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "shipped"
+    ],
+    "call_order": [
+      "http_get",
+      "http_get"
+    ]
+  }
+}

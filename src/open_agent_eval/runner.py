@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 
 from open_agent_eval.agents import Agent, AgentOutput, get_agent
-from open_agent_eval.graders import compute_tool_match, grade_response
+from open_agent_eval.graders import compute_tool_match, grade_task
 from open_agent_eval.schemas import TaskSpec
 from open_agent_eval.validators import ValidationIssue, validate_tasks_dir
 
@@ -34,6 +34,7 @@ class TaskRunResult:
     tool_precision: float
     tool_recall: float
     error: str | None
+    trace: list[dict[str, object]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -144,7 +145,11 @@ def run_benchmark(
             error = str(exc)
 
         latency_ms = round((perf_counter() - start) * 1000, 3)
-        grade = grade_response(task, output.response) if error is None else None
+        grade = (
+            grade_task(task, output.response, output.tool_calls, output.final_files)
+            if error is None
+            else None
+        )
 
         if error is not None:
             score = 0.0
@@ -179,6 +184,7 @@ def run_benchmark(
                 tool_precision=round(tool_precision, 4),
                 tool_recall=round(tool_recall, 4),
                 error=error,
+                trace=list(output.trace),
             )
         )
 

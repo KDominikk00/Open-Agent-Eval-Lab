@@ -1,0 +1,49 @@
+{
+  "task_id": "public.debugging.log-root-cause-04",
+  "title": "Find the failing upstream for search",
+  "category": "debugging",
+  "split": "public",
+  "difficulty": "medium",
+  "instructions": "Users report search requests hanging. Search the logs and name the upstream service that timed out.",
+  "expected_response": "search-index",
+  "environment": {
+    "logs": [
+      "INFO search request ok id=100",
+      "INFO search request ok id=101",
+      "INFO search request ok id=102",
+      "ERROR unrelated cache miss ratio high",
+      "INFO search request ok id=103",
+      "WARN search slow response 2100ms",
+      "ERROR search timeout calling search-index after 30s",
+      "INFO search retry scheduled",
+      "INFO healthcheck ok"
+    ]
+  },
+  "tools": [
+    "search_logs",
+    "read_file"
+  ],
+  "reference_trajectory": [
+    {
+      "tool": "search_logs",
+      "args": {
+        "query": "timeout"
+      }
+    }
+  ],
+  "max_steps": 4,
+  "tags": [
+    "logs",
+    "root-cause",
+    "episode"
+  ],
+  "grader": {
+    "type": "contains",
+    "needles": [
+      "search-index"
+    ],
+    "required_calls": [
+      "search_logs"
+    ]
+  }
+}
