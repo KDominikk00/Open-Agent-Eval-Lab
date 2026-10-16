@@ -1,0 +1,26 @@
+{
+  "name": "local-ollama",
+  "tasks_dir": "../tasks",
+  "output_dir": "../results",
+  "split": "public",
+  "generate_leaderboard": true,
+  "leaderboard_output_dir": "../leaderboard",
+  "runs": [
+    {
+      "agent": "ollama-chat",
+      "model": "llama3.1",
+      "temperature": 0.0,
+      "max_output_tokens": 512,
+      "timeout_seconds": 180.0,
+      "run_id_prefix": "ollama-llama3.1-public"
+    },
+    {
+      "agent": "ollama-chat",
+      "model": "qwen2.5",
+      "temperature": 0.0,
+      "max_output_tokens": 512,
+      "timeout_seconds": 180.0,
+      "run_id_prefix": "ollama-qwen2.5-public"
+    }
+  ]
+}

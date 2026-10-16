@@ -29,7 +29,7 @@ which shows how much of the dataset can be passed without doing the work (see li
 ## Limitations
 
 - **No real-model results are published.** The committed leaderboard contains only offline reference agents. The
-  OpenAI and Anthropic adapters are tested against mocked HTTP, not live APIs. Publishing real results is open work.
+  OpenAI, Anthropic and Ollama adapters are tested against mocked HTTP, not live servers. Publishing real results is open work.
 - **The hidden split is not hidden.** It lives in the public repository. See `docs/DATASET.md`.
 - **Small, templated dataset.** 31 public tasks from six families. Intervals are wide (the oracle's 100% still has a
   lower bound of 89%) and, because tasks within a family are correlated, somewhat optimistic.
@@ -41,5 +41,5 @@ which shows how much of the dataset can be passed without doing the work (see li
 
 ## Possible next steps
 
-Local-model adapter (for example Ollama) to publish real results without API keys; partial-credit graders; larger
+Run the Ollama profile on a real machine and publish the results; partial-credit graders; larger
 and less templated task families; per-tool failure analysis.

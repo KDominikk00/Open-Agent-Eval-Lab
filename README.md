@@ -21,7 +21,7 @@ order, what they refused to do, and what state they left behind.
 | `random` (5 seeded trials) | random valid tool calls (floor) | 1.9% | 0.2 – 14.2% |
 
 > **These are offline reference agents, not language models.** No real-model results are published yet. The OpenAI and
-> Anthropic adapters implement native tool-calling loops and are tested against mocked HTTP, not live APIs. The table
+> Anthropic and Ollama adapters implement native tool-calling loops and are tested against mocked HTTP, not live servers. The table
 > shows the benchmark separates trivial strategies from a solver; it says nothing about any real model.
 > `echo-reference` passing a quarter of tasks *without using any tool* is a finding about the dataset, discussed in
 > [design decisions](docs/DESIGN_DECISIONS.md).
@@ -134,9 +134,10 @@ print(summary.pass_rate, summary.pass_rate_ci_low, summary.pass_rate_ci_high)
 build_leaderboard(results_dir="results", output_dir="leaderboard")
 ```
 
-Real models (requires your own API key and budget; not exercised in CI):
+Real models (not exercised in CI): hosted APIs need your own key and budget, and local models via Ollama need neither.
 
 ```bash
+open-agent-eval run-profile --profile profiles/local-ollama.json      # local, no API key
 export OPENAI_API_KEY=...        # or ANTHROPIC_API_KEY
 open-agent-eval run --tasks-dir tasks --output-dir results --agent openai-chat --model gpt-4o-mini --split public
 open-agent-eval run --tasks-dir tasks --output-dir results --agent anthropic-chat --model claude-haiku-5-5 --split public

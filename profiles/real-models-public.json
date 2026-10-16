@@ -3,7 +3,6 @@
   "tasks_dir": "../tasks",
   "output_dir": "../results",
   "split": "public",
-  "max_tasks": 8,
   "generate_leaderboard": true,
   "leaderboard_output_dir": "../leaderboard",
   "runs": [

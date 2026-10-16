@@ -18,10 +18,14 @@ All notable changes to this project are documented in this file.
 - `GullibleAgent` example showing the benchmark catching an agent that obeys instructions found in documents.
 - `docs/ARCHITECTURE.md`, `docs/DATASET.md`, `docs/DESIGN_DECISIONS.md`; results chart rendered from the committed snapshot.
 
+- `ollama-chat` agent (OpenAI-compatible endpoint, no API key) and `profiles/local-ollama.json`; profile runs accept `trials` and `label`.
+- Run summaries record the resolved `model`; leaderboard rows read `agent (model)` so different models of one provider stay separate.
+
 ### Changed
 
 - Validation rejects tasks whose `expected_response` fails their own grader.
 - `RunSummary.total_tasks` counts unique tasks; `total_attempts` counts task x trial attempts and `passed_tasks` counts passed attempts.
+- `profiles/real-models-public.json` no longer caps runs at 8 tasks (sorted by id, that only ever covered `api_usage`).
 - Default Anthropic model is now `claude-haiku-5-5` (was `claude-3-5-haiku-latest`).
 - README rewritten; `ROADMAP.md` and `docs/RELEASE_CHECKLIST.md` folded into `CONTRIBUTING.md`.
 

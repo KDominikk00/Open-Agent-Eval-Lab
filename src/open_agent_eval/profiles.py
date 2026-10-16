@@ -23,6 +23,8 @@ class ProfileRunConfig:
     max_output_tokens: int = 512
     timeout_seconds: float = 45.0
     run_id_prefix: str | None = None
+    trials: int = 1
+    label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -125,6 +127,10 @@ def _parse_run(raw: object, *, index: int) -> ProfileRunConfig:
             f"profile field 'runs[{index}].run_id_prefix' must be a non-empty string or null"
         )
 
+    label = raw.get("label")
+    if label is not None and (not isinstance(label, str) or not label.strip()):
+        raise ValueError(f"profile field 'runs[{index}].label' must be a non-empty string or null")
+
     return ProfileRunConfig(
         agent=agent,
         model=model.strip() if isinstance(model, str) else None,
@@ -142,6 +148,8 @@ def _parse_run(raw: object, *, index: int) -> ProfileRunConfig:
             raw.get("timeout_seconds", 45.0), field=f"runs[{index}].timeout_seconds"
         ),
         run_id_prefix=run_id_prefix.strip() if isinstance(run_id_prefix, str) else None,
+        trials=_as_positive_int(raw.get("trials", 1), field=f"runs[{index}].trials"),
+        label=label.strip() if isinstance(label, str) else None,
     )
 
 
@@ -239,6 +247,8 @@ def execute_profile(
             run_id=run_id,
             only_split=split,
             max_tasks=max_tasks,
+            trials=run.trials,
+            label=run.label,
         )
 
         label = f"{run.agent} ({run.model})" if run.model else run.agent

@@ -127,3 +127,37 @@ class AgentFactoryErrors(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OllamaAgentTests(unittest.TestCase):
+    def test_registered_and_needs_no_api_key(self) -> None:
+        from open_agent_eval.agents import list_available_agents
+
+        self.assertIn("ollama-chat", list_available_agents())
+        with patch.dict("os.environ", {}, clear=True):
+            agent = get_agent("ollama-chat")
+            self.assertEqual("llama3.1", agent.resolved_model())  # type: ignore[attr-defined]
+            self.assertNotIn("Authorization", agent._headers())  # type: ignore[attr-defined]
+
+    def test_endpoint_and_model_come_from_environment(self) -> None:
+        env = {"OLLAMA_HOST": "gpu-box:11500", "OLLAMA_MODEL": "qwen2.5"}
+        with patch.dict("os.environ", env, clear=True):
+            agent = get_agent("ollama-chat")
+            self.assertEqual("http://gpu-box:11500/v1/chat/completions", agent.endpoint)  # type: ignore[attr-defined]
+            self.assertEqual("qwen2.5", agent.resolved_model())  # type: ignore[attr-defined]
+            self.assertEqual("mistral", get_agent("ollama-chat", model="mistral").resolved_model())  # type: ignore[attr-defined]
+
+    def test_single_turn_call_hits_local_endpoint_without_auth(self) -> None:
+        task = parse()
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "open_agent_eval.agents._post_json", return_value={"choices": [{"message": {"content": "e"}}]}
+        ) as post:
+            output = get_agent("ollama-chat").run(task)
+        self.assertEqual("e", output.response)
+        kwargs = post.call_args.kwargs
+        self.assertTrue(kwargs["url"].startswith("http://localhost:11434/"))
+        self.assertNotIn("Authorization", kwargs["headers"])
+
+    def test_openai_still_requires_a_key(self) -> None:
+        with patch.dict("os.environ", {}, clear=True), self.assertRaises(ValueError):
+            get_agent("openai-chat")._headers()  # type: ignore[attr-defined]

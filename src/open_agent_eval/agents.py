@@ -239,13 +239,20 @@ class OpenAIChatAgent:
     timeout_seconds: float = 45.0
     api_key: str | None = None
     endpoint: str = "https://api.openai.com/v1/chat/completions"
+    # Lets the same loop drive any OpenAI-compatible server (e.g. Ollama) that needs no key.
+    requires_api_key: bool = True
+    default_model: str = "gpt-4o-mini"
+    model_env: str = "OPENAI_MODEL"
 
     def _headers(self) -> dict[str, str]:
-        api_key = _resolve_api_key(explicit_key=self.api_key, env_name="OPENAI_API_KEY")
-        return {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json"}
+        if self.requires_api_key or self.api_key:
+            api_key = _resolve_api_key(explicit_key=self.api_key, env_name="OPENAI_API_KEY")
+            headers["Authorization"] = f"Bearer {api_key}"
+        return headers
 
-    def _model(self) -> str:
-        return self.model or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+    def resolved_model(self) -> str:
+        return self.model or os.getenv(self.model_env) or self.default_model
 
     @staticmethod
     def _first_message(response: dict[str, Any]) -> dict[str, Any]:
@@ -265,7 +272,7 @@ class OpenAIChatAgent:
             return output_from_episode(run_episode(task, self))
 
         payload: dict[str, Any] = {
-            "model": self._model(),
+            "model": self.resolved_model(),
             "messages": [
                 {
                     "role": "system",
@@ -316,7 +323,7 @@ class OpenAIChatAgent:
             messages.append({"role": "tool", "tool_call_id": call_id, "content": step.observation})
 
         payload: dict[str, Any] = {
-            "model": self._model(),
+            "model": self.resolved_model(),
             "messages": messages,
             "tools": [
                 {
@@ -394,7 +401,7 @@ class AnthropicChatAgent:
             "Content-Type": "application/json",
         }
 
-    def _model(self) -> str:
+    def resolved_model(self) -> str:
         return self.model or os.getenv("ANTHROPIC_MODEL") or "claude-haiku-5-5"
 
     def run(self, task: TaskSpec) -> AgentOutput:
@@ -402,7 +409,7 @@ class AnthropicChatAgent:
             return output_from_episode(run_episode(task, self))
 
         payload: dict[str, Any] = {
-            "model": self._model(),
+            "model": self.resolved_model(),
             "max_tokens": self.max_output_tokens,
             "temperature": self.temperature,
             "messages": [{"role": "user", "content": _task_prompt(task)}],
@@ -449,7 +456,7 @@ class AnthropicChatAgent:
             )
 
         payload: dict[str, Any] = {
-            "model": self._model(),
+            "model": self.resolved_model(),
             "max_tokens": self.max_output_tokens,
             "temperature": self.temperature,
             "messages": messages,
@@ -479,6 +486,13 @@ class AnthropicChatAgent:
         return FinalAnswer(text)
 
 
+def _ollama_endpoint() -> str:
+    host = os.getenv("OLLAMA_HOST") or "http://localhost:11434"
+    if "://" not in host:
+        host = f"http://{host}"
+    return f"{host.rstrip('/')}/v1/chat/completions"
+
+
 def _registry() -> dict[str, Agent]:
     return {name: factory() for name, factory in _builtin_agent_factories().items()}
 
@@ -498,6 +512,17 @@ def _builtin_agent_factories() -> dict[str, Callable[..., Agent]]:
             temperature=kwargs.get("temperature", 0.0),
             max_output_tokens=kwargs.get("max_output_tokens", 512),
             timeout_seconds=kwargs.get("timeout_seconds", 45.0),
+        ),
+        "ollama-chat": lambda **kwargs: OpenAIChatAgent(
+            name="ollama-chat",
+            model=kwargs.get("model"),
+            temperature=kwargs.get("temperature", 0.0),
+            max_output_tokens=kwargs.get("max_output_tokens", 512),
+            timeout_seconds=kwargs.get("timeout_seconds", 120.0),
+            endpoint=_ollama_endpoint(),
+            requires_api_key=False,
+            default_model="llama3.1",
+            model_env="OLLAMA_MODEL",
         ),
         "anthropic-chat": lambda **kwargs: AnthropicChatAgent(
             model=kwargs.get("model"),

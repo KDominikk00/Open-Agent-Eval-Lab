@@ -128,3 +128,45 @@ class PublishedSnapshotTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ModelLabelTests(unittest.TestCase):
+    def test_models_of_one_provider_stay_separate_on_the_leaderboard(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            results = Path(tmp) / "r"
+            for run_id, model, rate in (("a", "llama3.1", 0.5), ("b", "qwen2.5", 0.7)):
+                run = results / run_id
+                run.mkdir(parents=True)
+                (run / "summary.json").write_text(
+                    json.dumps(
+                        {"run_id": run_id, "agent_name": "ollama-chat", "model": model, "split": "public",
+                         "total_tasks": 10, "pass_rate": rate}
+                    )
+                )
+            generate_leaderboard(results, Path(tmp) / "site")
+            names = {a["agent_name"] for a in json.loads((Path(tmp) / "site" / "leaderboard.json").read_text())["aggregates"]}
+        self.assertEqual({"ollama-chat (llama3.1)", "ollama-chat (qwen2.5)"}, names)
+
+    def test_run_records_resolved_model(self) -> None:
+        from unittest.mock import patch
+
+        reply = {"choices": [{"message": {"content": "I don't know"}}]}
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            patch.dict("os.environ", {"OLLAMA_MODEL": "qwen2.5"}),
+            patch("open_agent_eval.agents._post_json", return_value=reply),
+        ):
+            run_dir, summary = run_from_directory(
+                tasks_dir=TASKS, output_dir=Path(tmp), agent_name="ollama-chat", only_split="public",
+                max_tasks=2, run_id="m",
+            )
+            config = json.loads((run_dir / "config.json").read_text())
+        self.assertEqual("qwen2.5", summary.model)
+        self.assertEqual("qwen2.5", config["model"])
+
+    def test_offline_agents_record_no_model(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            _, summary = run_from_directory(
+                tasks_dir=TASKS, output_dir=Path(tmp), agent_name="oracle", only_split="public", run_id="o"
+            )
+        self.assertIsNone(summary.model)

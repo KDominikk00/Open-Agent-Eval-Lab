@@ -59,6 +59,7 @@ class RunSummary:
     trials: int = 1
     total_attempts: int = 0
     label: str | None = None
+    model: str | None = None
     pass_rate_ci_low: float = 0.0
     pass_rate_ci_high: float = 1.0
     score_ci_low: float = 0.0
@@ -98,6 +99,7 @@ def _build_summary(
     finished_at: datetime,
     trials: int = 1,
     label: str | None = None,
+    model: str | None = None,
 ) -> RunSummary:
     total = len(results)
     passed = sum(1 for result in results if result.success)
@@ -126,6 +128,7 @@ def _build_summary(
         finished_at_utc=finished_at.isoformat(),
         trials=trials,
         label=label,
+        model=model,
         pass_rate_ci_low=round(pass_low, 4),
         pass_rate_ci_high=round(pass_high, 4),
         score_ci_low=round(score_low, 4),
@@ -173,6 +176,7 @@ def run_benchmark(
     split_label: str,
     trials: int = 1,
     label: str | None = None,
+    model: str | None = None,
 ) -> tuple[list[TaskRunResult], RunSummary]:
     """Run ``trials`` benchmark passes over tasks with a selected agent.
 
@@ -201,6 +205,7 @@ def run_benchmark(
         finished_at=finished_at,
         trials=trials,
         label=label,
+        model=model,
     )
 
     return results, summary
@@ -357,8 +362,10 @@ def run_from_directory(
         max_output_tokens=max_output_tokens,
         timeout_seconds=timeout_seconds,
     )
+    resolver = getattr(agent, "resolved_model", None)
+    resolved_model = model or (resolver() if callable(resolver) else None)
     results, summary = run_benchmark(
-        tasks, agent, run_id=run_id, split_label=split_label, trials=trials, label=label
+        tasks, agent, run_id=run_id, split_label=split_label, trials=trials, label=label, model=resolved_model
     )
     categories = build_category_summaries(results)
 
@@ -366,7 +373,7 @@ def run_from_directory(
         "tasks_dir": str(tasks_dir),
         "split": split_label,
         "agent_name": agent_name,
-        "model": model,
+        "model": resolved_model,
         "temperature": temperature,
         "max_output_tokens": max_output_tokens,
         "timeout_seconds": timeout_seconds,

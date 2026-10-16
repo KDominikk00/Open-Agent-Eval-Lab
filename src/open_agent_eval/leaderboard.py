@@ -78,9 +78,13 @@ def _is_smoke(summary: dict[str, Any]) -> bool:
 
 def _build_row(summary: dict[str, Any]) -> LeaderboardRow:
     label = summary.get("label")
+    model = summary.get("model")
+    agent_name = str(summary.get("agent_name", "unknown-agent"))
+    if isinstance(model, str) and model:
+        agent_name = f"{agent_name} ({model})"  # keeps different models of one provider apart
     return LeaderboardRow(
         run_id=str(summary.get("run_id", "unknown-run")),
-        agent_name=str(summary.get("agent_name", "unknown-agent")),
+        agent_name=agent_name,
         split=str(summary.get("split", "unknown")),
         total_tasks=_to_int(summary.get("total_tasks"), default=0),
         pass_rate=_to_float(summary.get("pass_rate"), default=0.0),

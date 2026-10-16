@@ -134,5 +134,37 @@ class ProfileTests(unittest.TestCase):
                 load_profile(profile_path)
 
 
+class ProfileTrialFieldTests(unittest.TestCase):
+    def test_shipped_profiles_load_and_cover_all_tasks(self) -> None:
+        from pathlib import Path
+
+        from open_agent_eval.profiles import load_profile
+
+        for name in ("local-smoke", "real-models-public", "local-ollama"):
+            profile = load_profile(Path(__file__).resolve().parent.parent / "profiles" / f"{name}.json")
+            self.assertTrue(profile.runs, name)
+        real = load_profile(Path(__file__).resolve().parent.parent / "profiles" / "real-models-public.json")
+        self.assertIsNone(real.max_tasks)
+
+    def test_trials_and_label_are_validated(self) -> None:
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from open_agent_eval.profiles import load_profile
+
+        def load(run: dict) -> object:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "p.json"
+                path.write_text(json.dumps({"name": "p", "runs": [{"agent": "oracle", **run}]}))
+                return load_profile(path)
+
+        profile = load({"trials": 3, "label": "smoke"})
+        self.assertEqual((3, "smoke"), (profile.runs[0].trials, profile.runs[0].label))  # type: ignore[attr-defined]
+        for bad in ({"trials": 0}, {"label": ""}):
+            with self.assertRaises(ValueError):
+                load(bad)
+
+
 if __name__ == "__main__":
     unittest.main()

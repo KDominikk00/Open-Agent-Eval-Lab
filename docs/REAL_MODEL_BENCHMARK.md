@@ -1,5 +1,24 @@
 # Real-Model Benchmark Quickstart
 
+Two routes: hosted APIs (needs keys and budget) or local models through Ollama (free, needs a machine that can run them).
+
+## Local models with Ollama (no API key)
+
+```bash
+ollama pull llama3.1 && ollama pull qwen2.5      # models that support tool calling
+open-agent-eval run-profile --profile profiles/local-ollama.json
+```
+
+`ollama-chat` talks to Ollama's OpenAI-compatible endpoint (`$OLLAMA_HOST`, default `http://localhost:11434`). Pick a
+model with `--model` or `$OLLAMA_MODEL`. The model must support tool calling; models that do not will answer without
+calling tools and fail the tool-use tasks, which is a valid result but not a fair one. Different models appear as separate
+leaderboard rows (`ollama-chat (llama3.1)`).
+
+Not yet verified against a live Ollama server: the adapter is tested against mocked HTTP only. Check one run by hand
+(`open-agent-eval run ... --agent ollama-chat --max-tasks 2`, then open `traces.html`) before trusting a full run.
+
+## Hosted APIs
+
 ## Required environment variables
 
 ```bash
