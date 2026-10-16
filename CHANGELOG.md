@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Sandboxed tool simulators (`read_file`, `write_file`, `list_files`, `search_logs`, `db_query`, `http_get`, `calculator`) and a multi-step episode loop that records full tool traces.
+- Behavioural graders: required, ordered and forbidden tool calls, forbidden response snippets, and final file-state checks.
+- Native tool-calling loops for the OpenAI and Anthropic agents on episode tasks.
+- Offline agents `oracle`, `keyword-retriever` and `random` (seeded).
+- 31 episode tasks (log forensics, SQL + math, config edits, prompt injection, API chaining, secret hygiene).
+- `--trials` for repeated runs, `--label` for tagging runs, Wilson and bootstrap confidence intervals, per-category/difficulty/grader breakdowns (`breakdowns.json`).
+- Leaderboard: ranked agents with 95% CIs, category heatmap, trace viewer (`traces.html`); `smoke` runs hidden unless `--include-smoke`.
+- Committed baseline snapshot in `benchmarks/published/` (`scripts/publish_baselines.sh`) used by the Pages deploy.
+
+### Changed
+
+- Validation rejects tasks whose `expected_response` fails their own grader.
+- `RunSummary.total_tasks` counts unique tasks; `total_attempts` counts task x trial attempts and `passed_tasks` counts passed attempts.
+
+### Fixed
+
+- `public.security.parameterized-query` reference answer did not satisfy its grader.
+
 ## [0.4.0] - 2026-02-21
 
 ### Added

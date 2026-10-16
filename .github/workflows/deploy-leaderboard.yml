@@ -34,26 +34,12 @@ jobs:
       - name: Install package
         run: pip install -e .
 
-      - name: Build benchmark runs
-        run: |
-          TS=$(date -u +%Y%m%d-%H%M%S)
-          PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split all
-          PYTHONPATH=src python -m open_agent_eval.cli run \
-            --tasks-dir tasks \
-            --output-dir results-pages \
-            --agent echo-reference \
-            --split public \
-            --run-id pages-public-${TS}
-          PYTHONPATH=src python -m open_agent_eval.cli run \
-            --tasks-dir tasks \
-            --output-dir results-pages \
-            --agent tool-hint \
-            --split hidden \
-            --run-id pages-hidden-${TS}
+      - name: Validate tasks
+        run: PYTHONPATH=src python -m open_agent_eval.cli validate --tasks-dir tasks --split all
 
-      - name: Generate leaderboard site
+      - name: Generate leaderboard site from committed baselines
         run: |
-          PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results-pages --output-dir site
+          PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir benchmarks/published --output-dir site
           cp site/leaderboard.html site/index.html
 
       - name: Setup Pages

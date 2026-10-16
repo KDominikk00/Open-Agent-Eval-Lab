@@ -33,6 +33,8 @@ def run_benchmark(
     temperature: float = 0.0,
     max_output_tokens: int = 512,
     timeout_seconds: float = 45.0,
+    trials: int = 1,
+    label: str | None = None,
 ) -> tuple[Path, RunSummary]:
     """Execute one benchmark run and return artifact path + run summary."""
 
@@ -47,13 +49,19 @@ def run_benchmark(
         only_split=split,
         run_id=run_id,
         max_tasks=max_tasks,
+        trials=trials,
+        label=label,
     )
 
 
-def build_leaderboard(*, results_dir: str | Path, output_dir: str | Path) -> Path:
+def build_leaderboard(
+    *, results_dir: str | Path, output_dir: str | Path, include_smoke: bool = False
+) -> Path:
     """Generate leaderboard artifacts from run summaries."""
 
-    return generate_leaderboard(results_dir=Path(results_dir), output_dir=Path(output_dir))
+    return generate_leaderboard(
+        results_dir=Path(results_dir), output_dir=Path(output_dir), include_smoke=include_smoke
+    )
 
 
 def load_benchmark_profile(profile_path: str | Path) -> BenchmarkProfile:

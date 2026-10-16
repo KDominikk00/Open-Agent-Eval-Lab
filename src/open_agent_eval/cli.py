@@ -86,12 +86,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="HTTP timeout for API-backed agents (default: 45)",
     )
 
+    run_parser.add_argument(
+        "--trials",
+        type=int,
+        default=1,
+        help="Repeat every task N times (stochastic agents are reseeded per trial)",
+    )
+    run_parser.add_argument(
+        "--label",
+        default=None,
+        help="Tag the run (e.g. 'smoke'); smoke-labelled runs are hidden from leaderboards by default",
+    )
+
     leaderboard_parser = subparsers.add_parser("leaderboard", help="Build leaderboard artifacts")
     leaderboard_parser.add_argument("--results-dir", required=True, help="Directory containing run folders")
     leaderboard_parser.add_argument(
         "--output-dir",
         default="leaderboard",
         help="Directory where leaderboard artifacts are written",
+    )
+
+    leaderboard_parser.add_argument(
+        "--include-smoke",
+        action="store_true",
+        help="Include runs labelled 'smoke'",
     )
 
     run_profile_parser = subparsers.add_parser("run-profile", help="Run a benchmark profile JSON")
@@ -154,6 +172,8 @@ def _cmd_run(
     split: str | None,
     run_id: str | None,
     max_tasks: int | None,
+    trials: int = 1,
+    label: str | None = None,
 ) -> int:
     try:
         run_dir, summary = run_from_directory(
@@ -167,13 +187,19 @@ def _cmd_run(
             only_split=split,
             run_id=run_id,
             max_tasks=max_tasks,
+            trials=trials,
+            label=label,
         )
     except ValueError as exc:
         print(str(exc))
         return 1
 
     print(f"Run completed for split '{summary.split}' with agent '{summary.agent_name}'")
-    print(f"Tasks passed: {summary.passed_tasks}/{summary.total_tasks} ({summary.pass_rate:.2%})")
+    print(
+        f"Attempts passed: {summary.passed_tasks}/{summary.total_attempts} "
+        f"({summary.pass_rate:.2%}, 95% CI {summary.pass_rate_ci_low:.1%}-{summary.pass_rate_ci_high:.1%}; "
+        f"{summary.total_tasks} tasks x {summary.trials} trial(s))"
+    )
     print(f"Average score: {summary.average_score:.2f}")
     print(f"Average latency: {summary.average_latency_ms:.3f} ms")
     print(f"Average tool precision/recall: {summary.average_tool_precision:.2f}/{summary.average_tool_recall:.2f}")
@@ -181,9 +207,11 @@ def _cmd_run(
     return 0
 
 
-def _cmd_leaderboard(results_dir: Path, output_dir: Path) -> int:
+def _cmd_leaderboard(results_dir: Path, output_dir: Path, include_smoke: bool = False) -> int:
     try:
-        path = generate_leaderboard(results_dir=results_dir, output_dir=output_dir)
+        path = generate_leaderboard(
+            results_dir=results_dir, output_dir=output_dir, include_smoke=include_smoke
+        )
     except ValueError as exc:
         print(str(exc))
         return 1
@@ -257,11 +285,15 @@ def main() -> None:
                 split=_split_arg(args.split),
                 run_id=args.run_id,
                 max_tasks=args.max_tasks,
+                trials=args.trials,
+                label=args.label,
             )
         )
 
     if args.command == "leaderboard":
-        raise SystemExit(_cmd_leaderboard(Path(args.results_dir), Path(args.output_dir)))
+        raise SystemExit(
+            _cmd_leaderboard(Path(args.results_dir), Path(args.output_dir), args.include_smoke)
+        )
 
     if args.command == "run-profile":
         raise SystemExit(

@@ -1,0 +1,83 @@
+[
+  {
+    "category": "api_usage",
+    "total_tasks": 6,
+    "passed_tasks": 1,
+    "pass_rate": 0.0333,
+    "average_score": 0.0333,
+    "pass_rate_ci_low": 0.0016,
+    "pass_rate_ci_high": 0.4294
+  },
+  {
+    "category": "data_analysis",
+    "total_tasks": 4,
+    "passed_tasks": 0,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "pass_rate_ci_low": 0.0,
+    "pass_rate_ci_high": 0.4899
+  },
+  {
+    "category": "data_transformation",
+    "total_tasks": 2,
+    "passed_tasks": 0,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "pass_rate_ci_low": 0.0,
+    "pass_rate_ci_high": 0.6576
+  },
+  {
+    "category": "debugging",
+    "total_tasks": 5,
+    "passed_tasks": 1,
+    "pass_rate": 0.04,
+    "average_score": 0.04,
+    "pass_rate_ci_low": 0.0019,
+    "pass_rate_ci_high": 0.4778
+  },
+  {
+    "category": "file_ops",
+    "total_tasks": 4,
+    "passed_tasks": 0,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "pass_rate_ci_low": 0.0,
+    "pass_rate_ci_high": 0.4899
+  },
+  {
+    "category": "formatting",
+    "total_tasks": 1,
+    "passed_tasks": 0,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "pass_rate_ci_low": 0.0,
+    "pass_rate_ci_high": 0.7935
+  },
+  {
+    "category": "reasoning",
+    "total_tasks": 1,
+    "passed_tasks": 0,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "pass_rate_ci_low": 0.0,
+    "pass_rate_ci_high": 0.7935
+  },
+  {
+    "category": "safety",
+    "total_tasks": 4,
+    "passed_tasks": 1,
+    "pass_rate": 0.05,
+    "average_score": 0.05,
+    "pass_rate_ci_low": 0.0024,
+    "pass_rate_ci_high": 0.5385
+  },
+  {
+    "category": "security",
+    "total_tasks": 4,
+    "passed_tasks": 0,
+    "pass_rate": 0.0,
+    "average_score": 0.0,
+    "pass_rate_ci_low": 0.0,
+    "pass_rate_ci_high": 0.4899
+  }
+]

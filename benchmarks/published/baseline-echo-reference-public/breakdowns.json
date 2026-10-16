@@ -1,0 +1,143 @@
+{
+  "category": [
+    {
+      "category": "api_usage",
+      "total_tasks": 6,
+      "passed_tasks": 2,
+      "pass_rate": 0.3333,
+      "average_score": 0.3333,
+      "pass_rate_ci_low": 0.0968,
+      "pass_rate_ci_high": 0.7
+    },
+    {
+      "category": "data_analysis",
+      "total_tasks": 4,
+      "passed_tasks": 0,
+      "pass_rate": 0.0,
+      "average_score": 0.0,
+      "pass_rate_ci_low": 0.0,
+      "pass_rate_ci_high": 0.4899
+    },
+    {
+      "category": "data_transformation",
+      "total_tasks": 2,
+      "passed_tasks": 2,
+      "pass_rate": 1.0,
+      "average_score": 1.0,
+      "pass_rate_ci_low": 0.3424,
+      "pass_rate_ci_high": 1.0
+    },
+    {
+      "category": "debugging",
+      "total_tasks": 5,
+      "passed_tasks": 1,
+      "pass_rate": 0.2,
+      "average_score": 0.2,
+      "pass_rate_ci_low": 0.0362,
+      "pass_rate_ci_high": 0.6245
+    },
+    {
+      "category": "file_ops",
+      "total_tasks": 4,
+      "passed_tasks": 0,
+      "pass_rate": 0.0,
+      "average_score": 0.0,
+      "pass_rate_ci_low": 0.0,
+      "pass_rate_ci_high": 0.4899
+    },
+    {
+      "category": "formatting",
+      "total_tasks": 1,
+      "passed_tasks": 1,
+      "pass_rate": 1.0,
+      "average_score": 1.0,
+      "pass_rate_ci_low": 0.2065,
+      "pass_rate_ci_high": 1.0
+    },
+    {
+      "category": "reasoning",
+      "total_tasks": 1,
+      "passed_tasks": 1,
+      "pass_rate": 1.0,
+      "average_score": 1.0,
+      "pass_rate_ci_low": 0.2065,
+      "pass_rate_ci_high": 1.0
+    },
+    {
+      "category": "safety",
+      "total_tasks": 4,
+      "passed_tasks": 0,
+      "pass_rate": 0.0,
+      "average_score": 0.0,
+      "pass_rate_ci_low": 0.0,
+      "pass_rate_ci_high": 0.4899
+    },
+    {
+      "category": "security",
+      "total_tasks": 4,
+      "passed_tasks": 1,
+      "pass_rate": 0.25,
+      "average_score": 0.25,
+      "pass_rate_ci_low": 0.0456,
+      "pass_rate_ci_high": 0.6994
+    }
+  ],
+  "difficulty": [
+    {
+      "category": "easy",
+      "total_tasks": 6,
+      "passed_tasks": 4,
+      "pass_rate": 0.6667,
+      "average_score": 0.6667,
+      "pass_rate_ci_low": 0.3,
+      "pass_rate_ci_high": 0.9032
+    },
+    {
+      "category": "hard",
+      "total_tasks": 5,
+      "passed_tasks": 0,
+      "pass_rate": 0.0,
+      "average_score": 0.0,
+      "pass_rate_ci_low": 0.0,
+      "pass_rate_ci_high": 0.4345
+    },
+    {
+      "category": "medium",
+      "total_tasks": 20,
+      "passed_tasks": 4,
+      "pass_rate": 0.2,
+      "average_score": 0.2,
+      "pass_rate_ci_low": 0.0807,
+      "pass_rate_ci_high": 0.416
+    }
+  ],
+  "grader_type": [
+    {
+      "category": "contains",
+      "total_tasks": 27,
+      "passed_tasks": 4,
+      "pass_rate": 0.1481,
+      "average_score": 0.1481,
+      "pass_rate_ci_low": 0.0592,
+      "pass_rate_ci_high": 0.3248
+    },
+    {
+      "category": "exact",
+      "total_tasks": 2,
+      "passed_tasks": 2,
+      "pass_rate": 1.0,
+      "average_score": 1.0,
+      "pass_rate_ci_low": 0.3424,
+      "pass_rate_ci_high": 1.0
+    },
+    {
+      "category": "json",
+      "total_tasks": 2,
+      "passed_tasks": 2,
+      "pass_rate": 1.0,
+      "average_score": 1.0,
+      "pass_rate_ci_low": 0.3424,
+      "pass_rate_ci_high": 1.0
+    }
+  ]
+}

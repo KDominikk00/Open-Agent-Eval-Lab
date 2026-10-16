@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import random
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from open_agent_eval.agents import (
     AgentOutput,
@@ -101,6 +101,9 @@ class RandomAgent:
 
     name: str = "random"
     seed: int = 0
+
+    def with_trial(self, trial: int) -> "RandomAgent":
+        return replace(self, seed=self.seed + trial)
 
     def _rng(self, task: TaskSpec, step: int) -> random.Random:
         digest = hashlib.sha256(f"{self.seed}:{task.task_id}:{step}".encode()).hexdigest()

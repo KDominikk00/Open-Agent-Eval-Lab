@@ -11,3 +11,6 @@ results/
 leaderboard/
 results-ci/
 leaderboard-ci/
+benchmarks/site/
+results-pages/
+site/

@@ -26,6 +26,17 @@ jobs:
             --agent instruction-snippet \
             --split public \
             --max-tasks 3 \
+            --label smoke \
             --run-id run-ci-smoke
+      - name: Offline multi-trial episode run
+        run: |
+          PYTHONPATH=src python -m open_agent_eval.cli run \
+            --tasks-dir tasks \
+            --output-dir results-ci \
+            --agent random \
+            --split all \
+            --trials 3 \
+            --label smoke \
+            --run-id run-ci-random
       - name: Build smoke leaderboard
-        run: PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results-ci --output-dir leaderboard-ci
+        run: PYTHONPATH=src python -m open_agent_eval.cli leaderboard --results-dir results-ci --output-dir leaderboard-ci --include-smoke
